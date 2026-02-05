@@ -1,12 +1,11 @@
 {
-  "name": "iea-liquidacion-sueldos",
-  "version": "2.0.0",
-  "description": "Sistema de Liquidación de Sueldos IEA",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
+  "name": "iea-liquidacion-pro",
+  "version": "4.30.0",
+  "private": true,
   "dependencies": {
     "express": "^4.18.2"
+  },
+  "scripts": {
+    "start": "node server.js"
   }
 }
