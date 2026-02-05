@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IEA Liquidación Pro v4.30</title>
+<title>IEA Liquidación Pro v5.0</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -335,6 +335,21 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
 .timeline-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.85rem; flex-shrink:0; z-index:1; }
 .timeline-content { flex:1; }
 .timeline-content .time { font-size:0.75rem; color:var(--text-muted); }
+
+/* BADGE ADICIONALES */
+.badge-purple { background:rgba(139,92,246,0.1); color:#7c3aed; }
+.badge-licencia { background:rgba(245,158,11,0.15); color:#b45309; border:1px dashed #f59e0b; }
+
+/* ARCA SUMMARY */
+.arca-summary { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+.arca-stat { background:var(--surface-alt); border-radius:var(--radius-sm); padding:1rem; text-align:center; border:1px solid var(--border-light); }
+.arca-stat .value { font-size:1.5rem; font-weight:700; line-height:1.2; }
+.arca-stat .label { font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem; }
+
+/* DESIGNACIONES */
+.desig-table th { font-size:0.7rem; padding:0.6rem 0.5rem; }
+.desig-table td { font-size:0.8rem; padding:0.5rem; }
+.desig-table tr:nth-child(even) { background:var(--surface-alt); }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -403,6 +418,9 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
         <div class="nav-item" data-page="antiguedad" onclick="navigateTo('antiguedad')">
           <span class="nav-icon">📅</span> Antigüedad
         </div>
+        <div class="nav-item" data-page="designaciones" onclick="navigateTo('designaciones')">
+          <span class="nav-icon">📋</span> Libro Designaciones
+        </div>
       </div>
       <div class="nav-section">
         <div class="nav-section-title">Liquidación</div>
@@ -418,8 +436,8 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
         <div class="nav-item" data-page="anomalias" onclick="navigateTo('anomalias')">
           <span class="nav-icon">⚠️</span> Detección Anomalías
         </div>
-        <div class="nav-item" data-page="absentismo" onclick="navigateTo('absentismo')">
-          <span class="nav-icon">🗓️</span> Absentismo
+        <div class="nav-item" data-page="ausentismo" onclick="navigateTo('ausentismo')">
+          <span class="nav-icon">🗓️</span> Ausentismo
         </div>
       </div>
       <div class="nav-section">
@@ -529,10 +547,13 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
           <option value="Media">Media</option>
           <option value="Superior">Superior</option>
           <option value="Formacion">Formación</option>
+          <option value="Administrativos">Administrativos</option>
         </select>
         <select class="filter-select" id="empFilterEstado" onchange="renderEmpleados()">
           <option value="">Todos</option>
           <option value="activo">Activos</option>
+          <option value="licencia">En Licencia</option>
+          <option value="baja_provisoria">Baja Provisoria</option>
           <option value="baja">De baja</option>
         </select>
         <div style="flex:1"></div>
@@ -545,12 +566,14 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
               <tr>
                 <th>CUIL</th>
                 <th>Nombre</th>
+                <th>Dirección</th>
                 <th>Nivel</th>
                 <th>Horas</th>
                 <th>Antigüedad</th>
                 <th>Sit. Revista</th>
                 <th>Jurisdicción</th>
                 <th>Estado</th>
+                <th>ARCA</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -612,13 +635,15 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
       </div>
       <div class="guide-box">
         <h4>💡 ¿Cómo funciona el cálculo de antigüedad?</h4>
-        <p>El sistema calcula la antigüedad docente de forma acumulativa considerando la fecha de alta en la institución. Genera alertas automáticas cuando un empleado está próximo a cambiar de tramo salarial (30 días antes), para que puedas anticipar el impacto en la liquidación.</p>
+        <p>El sistema calcula la antigüedad docente basándose en los <strong>días efectivamente activos</strong> según el historial ARCA (altas y bajas). Los períodos de licencia o baja <strong>no suman</strong> antigüedad. Genera alertas automáticas cuando un empleado está próximo a cambiar de tramo salarial (30 días antes).</p>
       </div>
       <div id="antAlerts"></div>
       <div class="card">
         <div class="card-header">
           <h3>Tabla de Antigüedades</h3>
-          <button class="btn btn-secondary btn-sm" onclick="exportAntiguedades()">📥 Exportar</button>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn btn-secondary btn-sm" onclick="exportAntiguedades()">📥 Exportar</button>
+          </div>
         </div>
         <div class="table-wrapper">
           <table>
@@ -626,6 +651,7 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
               <tr>
                 <th>Empleado</th>
                 <th>Fecha Alta</th>
+                <th>Días Activos ARCA</th>
                 <th>Años</th>
                 <th>Meses</th>
                 <th>Días</th>
@@ -633,6 +659,7 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
                 <th>Próximo Tramo</th>
                 <th>Faltan</th>
                 <th>Estado</th>
+                <th>Hist. ARCA</th>
               </tr>
             </thead>
             <tbody id="antTableBody"></tbody>
@@ -732,10 +759,10 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
       <div id="anomResults"></div>
     </div>
 
-    <!-- ====== ABSENTISMO ====== -->
-    <div class="page" id="page-absentismo" style="display:none">
+    <!-- ====== AUSENTISMO ====== -->
+    <div class="page" id="page-ausentismo" style="display:none">
       <div class="page-header">
-        <div class="page-title">Análisis de Absentismo</div>
+        <div class="page-title">Análisis de Ausentismo</div>
         <div class="page-subtitle">Heatmap de inasistencias por sección y nivel</div>
       </div>
       <div class="guide-box">
@@ -743,7 +770,7 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
         <p>Los colores más intensos (rojo) indican mayor cantidad de inasistencias. Esto te permite detectar patrones: ¿hay más licencias en un nivel que en otro? ¿hay meses más problemáticos? Usá los filtros para explorar los datos.</p>
       </div>
       <div class="toolbar">
-        <select class="filter-select" id="absYear" onchange="renderAbsentismo()"></select>
+        <select class="filter-select" id="absYear" onchange="renderAusentismo()"></select>
       </div>
       <div class="card">
         <div class="card-header"><h3>Mapa de Calor — Inasistencias por Nivel y Mes</h3></div>
@@ -838,7 +865,102 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
       </div>
     </div>
 
+    <!-- ====== LIBRO DE DESIGNACIONES ====== -->
+    <div class="page" id="page-designaciones" style="display:none">
+      <div class="page-header">
+        <div class="page-title">Libro de Designaciones</div>
+        <div class="page-subtitle">Registro oficial de designaciones docentes — Formato reglamentario</div>
+      </div>
+      <div class="guide-box">
+        <h4>📋 Libro de Designaciones Docentes</h4>
+        <p>Este módulo replica el formato del Libro de Designaciones reglamentario. Refleja las altas y bajas ARCA de cada empleado. Usá el botón de exportar para generar el archivo CSV para imprimir o archivar.</p>
+      </div>
+      <div class="toolbar">
+        <input type="text" class="search-input" id="desigSearch" placeholder="Buscar por nombre o CUIL..." oninput="renderDesignaciones()">
+        <select class="filter-select" id="desigFilterNivel" onchange="renderDesignaciones()">
+          <option value="">Todos los niveles</option>
+          <option value="Media">Media</option>
+          <option value="Superior">Superior</option>
+          <option value="Formacion">Formación</option>
+          <option value="Administrativos">Administrativos</option>
+        </select>
+        <div style="flex:1"></div>
+        <button class="btn btn-secondary btn-sm" onclick="exportDesignaciones()">📥 Exportar CSV</button>
+      </div>
+      <div class="card">
+        <div class="table-wrapper">
+          <table class="desig-table">
+            <thead>
+              <tr>
+                <th>CARGO</th>
+                <th>ASIGNAT.</th>
+                <th>HORAS</th>
+                <th>CURSO Y DIV.</th>
+                <th>TITULAR / SUPL.</th>
+                <th>DENOM. PLAN Nº</th>
+                <th>MODALIDAD / DISP.</th>
+                <th>ALTA FECHA</th>
+                <th>BAJA FECHA</th>
+                <th>EMPLEADO</th>
+                <th>CUIL</th>
+                <th>DÍAS ACTIVOS</th>
+              </tr>
+            </thead>
+            <tbody id="desigTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </main>
+</div>
+
+<!-- ====== MODAL HISTORIAL ARCA ====== -->
+<div class="modal-overlay" id="modalArca">
+  <div class="modal" style="max-width:800px">
+    <div class="modal-header">
+      <h3>📋 Historial ARCA — Altas y Bajas</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modalArca')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="arcaEmpInfo" style="margin-bottom:1rem"></div>
+      <div class="arca-summary" id="arcaSummary"></div>
+      <div class="card" style="margin-bottom:1.5rem">
+        <div class="card-header"><h3>Registrar Alta / Baja ARCA</h3></div>
+        <div class="card-body compact" id="arcaFormSection">
+          <div class="form-row" style="grid-template-columns:auto 1fr 2fr;gap:0.75rem">
+            <div class="form-group">
+              <label>Tipo</label>
+              <select class="form-input" id="arcaTipo">
+                <option value="Alta">📗 Alta</option>
+                <option value="Baja">📕 Baja</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Fecha</label>
+              <input type="date" class="form-input" id="arcaFecha">
+            </div>
+            <div class="form-group">
+              <label>Motivo</label>
+              <input type="text" class="form-input" id="arcaMotivo" placeholder="Ej: Ingreso, Licencia art. 115, Reincorporación...">
+            </div>
+          </div>
+          <div class="form-row" style="grid-template-columns:1fr auto">
+            <div class="form-group">
+              <label>Observaciones (opcional)</label>
+              <input type="text" class="form-input" id="arcaObs" placeholder="Detalle adicional...">
+            </div>
+            <div class="form-group">
+              <label>&nbsp;</label>
+              <button class="btn btn-primary btn-sm" onclick="saveArcaEvent()" style="width:100%">Registrar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <h4 style="font-size:0.9rem;font-weight:600;margin-bottom:1rem;color:var(--primary)">📜 Historial Completo</h4>
+      <div id="arcaTimeline"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ====== MODALS ====== -->
@@ -853,11 +975,12 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
         <div class="form-group"><label>CUIL</label><input type="text" class="form-input mono" id="empCuil" placeholder="XX-XXXXXXXX-X"></div>
         <div class="form-group"><label>Nombre Completo</label><input type="text" class="form-input" id="empNombre" placeholder="Apellido, Nombre"></div>
       </div>
+      <div class="form-group"><label>Dirección</label><input type="text" class="form-input" id="empDireccion" placeholder="Calle, Nº, Localidad, Provincia"></div>
       <div class="form-row three">
         <div class="form-group"><label>Nivel</label>
-          <select class="form-input" id="empNivel"><option value="Media">Media</option><option value="Superior">Superior</option><option value="Formacion">Formación</option></select>
+          <select class="form-input" id="empNivel"><option value="Media">Media</option><option value="Superior">Superior</option><option value="Formacion">Formación</option><option value="Administrativos">Administrativos</option></select>
         </div>
-        <div class="form-group"><label>Horas Cátedra</label><input type="number" class="form-input" id="empHoras" min="1" max="60" value="12"></div>
+        <div class="form-group"><label>Horas Cátedra</label><input type="number" class="form-input" id="empHoras" min="0" max="60" value="12"></div>
         <div class="form-group"><label>Sit. Revista</label>
           <select class="form-input" id="empRevista"><option value="TIT">Titular</option><option value="INT">Interino</option><option value="SUP">Suplente</option><option value="CON">Contratado</option><option value="PROV">Provisional</option></select>
         </div>
@@ -868,7 +991,7 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
         </div>
         <div class="form-group"><label>Fecha de Alta en Cargo</label><input type="date" class="form-input" id="empFechaAlta"></div>
         <div class="form-group"><label>Estado</label>
-          <select class="form-input" id="empEstado" onchange="toggleBajaProvisoria()"><option value="activo">Activo</option><option value="baja_provisoria">Baja Provisoria</option><option value="baja">De Baja</option></select>
+          <select class="form-input" id="empEstado" onchange="toggleBajaProvisoria()"><option value="activo">Activo</option><option value="licencia">En Licencia</option><option value="baja_provisoria">Baja Provisoria</option><option value="baja">De Baja</option></select>
         </div>
       </div>
       <div class="form-row three">
@@ -974,7 +1097,8 @@ const ROLES_PERMISOS = {
 const ESCALAS_SALARIALES = {
   'Media':     { TIT:450000, INT:400000, SUP:350000, CON:300000 },
   'Superior':  { TIT:550000, INT:500000, SUP:450000, CON:400000 },
-  'Formacion': { TIT:600000, INT:550000, SUP:500000, CON:450000 }
+  'Formacion': { TIT:600000, INT:550000, SUP:500000, CON:450000 },
+  'Administrativos': { TIT:400000, INT:370000, SUP:340000, CON:310000 }
 };
 
 const TRAMOS_ANTIGUEDAD = [
@@ -1098,7 +1222,7 @@ function navigateTo(page) {
   const renderers = {
     dashboard: updateDashboard, empleados: renderEmpleados, novedades: renderNovedades,
     antiguedad: renderAntiguedad, recibos: renderRecibos, anomalias: renderAnomalias,
-    absentismo: renderAbsentismo, auditoria: renderAuditoria
+    ausentismo: renderAusentismo, auditoria: renderAuditoria, designaciones: renderDesignaciones
   };
   if (renderers[page]) renderers[page]();
 }
@@ -1155,8 +1279,62 @@ function logAudit(action, detail) {
 }
 
 // ============================================================
-// ANTIGÜEDAD CALCULATIONS
+// ANTIGÜEDAD CALCULATIONS (ARCA-based)
 // ============================================================
+function calcDiasActivosArca(emp) {
+  const hist = emp.historialArca;
+  if (!hist || !hist.length) {
+    // Fallback: si no hay historial ARCA, usar fecha de alta directamente
+    if (!emp.fechaAlta) return 0;
+    // Si está en licencia o baja_provisoria, descontar los meses pausados del viejo sistema
+    const alta = new Date(emp.fechaAlta);
+    const hoy = new Date();
+    let totalDias = Math.max(0, Math.floor((hoy - alta) / 86400000));
+    // Descontar bajas provisorias anteriores
+    if (emp.bajasProvisoriasHistory && emp.bajasProvisoriasHistory.length) {
+      emp.bajasProvisoriasHistory.forEach(b => {
+        if (b.desde) {
+          const desde = new Date(b.desde);
+          const hasta = b.hasta ? new Date(b.hasta) : new Date();
+          totalDias -= Math.max(0, Math.ceil((hasta - desde) / 86400000));
+        }
+      });
+    }
+    // Si está en licencia activa sin historial ARCA, contar solo hasta la fecha de licencia
+    if ((emp.estado === 'licencia' || emp.estado === 'baja_provisoria') && emp.licenciaDesde) {
+      const licDesde = new Date(emp.licenciaDesde);
+      const diasDesLic = Math.max(0, Math.floor((new Date() - licDesde) / 86400000));
+      totalDias = Math.max(0, totalDias - diasDesLic);
+    }
+    return Math.max(0, totalDias);
+  }
+  // Cálculo basado en historial ARCA (altas y bajas)
+  const sorted = [...hist].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+  let totalDias = 0;
+  let ultimaAlta = null;
+  const hoy = new Date().toISOString().slice(0, 10);
+  for (const ev of sorted) {
+    if (ev.tipo === 'Alta') {
+      ultimaAlta = ev.fecha;
+    } else if (ev.tipo === 'Baja' && ultimaAlta) {
+      totalDias += daysBetweenDates(ultimaAlta, ev.fecha);
+      ultimaAlta = null;
+    }
+  }
+  // Si la última entrada es un Alta, contar hasta hoy (solo si está activo)
+  if (ultimaAlta && emp.estado !== 'licencia' && emp.estado !== 'baja_provisoria') {
+    totalDias += daysBetweenDates(ultimaAlta, hoy);
+  } else if (ultimaAlta && (emp.estado === 'licencia' || emp.estado === 'baja_provisoria')) {
+    // Si está en licencia, contar hasta la fecha en que empezó la licencia
+    const licDesde = emp.licenciaDesde || hoy;
+    totalDias += daysBetweenDates(ultimaAlta, licDesde);
+  }
+  return totalDias;
+}
+function daysBetweenDates(d1, d2) {
+  const a = new Date(d1), b = new Date(d2);
+  return Math.max(0, Math.floor((b - a) / 86400000));
+}
 function calcMesesPausados(bajasHistory) {
   if (!bajasHistory || !bajasHistory.length) return 0;
   let totalDias = 0;
@@ -1170,24 +1348,14 @@ function calcMesesPausados(bajasHistory) {
   return Math.floor(totalDias / 30);
 }
 function calcAntiguedad(fechaAlta, emp) {
-  if (!fechaAlta) return { anios:0, meses:0, dias:0, totalMeses:0, mesesPausados:0 };
-  const alta = new Date(fechaAlta);
-  const hoy = new Date();
-  let anios = hoy.getFullYear() - alta.getFullYear();
-  let meses = hoy.getMonth() - alta.getMonth();
-  let dias = hoy.getDate() - alta.getDate();
-  if (dias < 0) { meses--; dias += new Date(hoy.getFullYear(), hoy.getMonth(), 0).getDate(); }
-  if (meses < 0) { anios--; meses += 12; }
-  // Descontar meses de baja provisoria
-  let mesesPausados = 0;
-  if (emp && emp.bajasProvisoriasHistory && emp.bajasProvisoriasHistory.length > 0) {
-    mesesPausados = calcMesesPausados(emp.bajasProvisoriasHistory);
-    let totalMeses = anios * 12 + meses - mesesPausados;
-    if (totalMeses < 0) totalMeses = 0;
-    anios = Math.floor(totalMeses / 12);
-    meses = totalMeses % 12;
-  }
-  return { anios, meses, dias, totalMeses: anios*12 + meses, mesesPausados };
+  if (!fechaAlta && (!emp || !emp.historialArca || !emp.historialArca.length)) return { anios:0, meses:0, dias:0, totalMeses:0, mesesPausados:0, diasActivos:0 };
+  // Usar ARCA si hay historial
+  const diasActivos = calcDiasActivosArca(emp || {});
+  const anios = Math.floor(diasActivos / 365);
+  const meses = Math.floor((diasActivos % 365) / 30);
+  const dias = diasActivos % 30;
+  const mesesPausados = emp ? calcMesesPausados(emp.bajasProvisoriasHistory) : 0;
+  return { anios, meses, dias, totalMeses: anios*12 + meses, mesesPausados, diasActivos };
 }
 function getTramoActual(anios) {
   let tramo = TRAMOS_ANTIGUEDAD[0];
@@ -1203,13 +1371,11 @@ function diasParaProximoTramo(fechaAlta, emp) {
   const ant = calcAntiguedad(fechaAlta, emp);
   const prox = getProximoTramo(ant.anios);
   if (!prox) return null;
-  const alta = new Date(fechaAlta);
-  const fechaProx = new Date(alta);
-  const mesesPausados = ant.mesesPausados || 0;
-  fechaProx.setFullYear(alta.getFullYear() + prox.anios);
-  fechaProx.setMonth(fechaProx.getMonth() + mesesPausados);
-  const diff = Math.ceil((fechaProx - new Date()) / (1000*60*60*24));
-  return diff;
+  // Calcular cuántos días faltan basándose en días activos ARCA
+  const diasNecesarios = prox.anios * 365;
+  const diasActivos = ant.diasActivos || 0;
+  const diff = diasNecesarios - diasActivos;
+  return diff > 0 ? diff : 0;
 }
 
 // ============================================================
@@ -1220,6 +1386,7 @@ function openEmpleadoModal(emp = null) {
   document.getElementById('empModalTitle').textContent = emp ? 'Editar Empleado' : 'Nuevo Empleado';
   document.getElementById('empCuil').value = emp?.cuil || '';
   document.getElementById('empNombre').value = emp?.nombre || '';
+  document.getElementById('empDireccion').value = emp?.direccion || '';
   document.getElementById('empNivel').value = emp?.nivel || 'Media';
   document.getElementById('empHoras').value = emp?.horas || 0;
   document.getElementById('empRevista').value = emp?.revista || 'TIT';
@@ -1245,7 +1412,7 @@ function openEmpleadoModal(emp = null) {
 function toggleBajaProvisoria() {
   const estado = document.getElementById('empEstado').value;
   const panel = document.getElementById('bajaProvisoriaPanelModal');
-  panel.style.display = estado === 'baja_provisoria' ? 'block' : 'none';
+  panel.style.display = (estado === 'baja_provisoria' || estado === 'licencia') ? 'block' : 'none';
 }
 function saveEmpleado() {
   const cuil = document.getElementById('empCuil').value.trim();
@@ -1254,6 +1421,7 @@ function saveEmpleado() {
   const nuevoEstado = document.getElementById('empEstado').value;
   const data = {
     cuil, nombre,
+    direccion: document.getElementById('empDireccion').value.trim(),
     nivel: document.getElementById('empNivel').value,
     horas: parseInt(document.getElementById('empHoras').value) || 0,
     revista: document.getElementById('empRevista').value,
@@ -1276,29 +1444,38 @@ function saveEmpleado() {
     const idx = state.empleados.findIndex(e => e.id === state.editingEmpId);
     if (idx >= 0) {
       const prev = state.empleados[idx];
-      // Lógica de baja provisoria
-      if (nuevoEstado === 'baja_provisoria' && prev.estado !== 'baja_provisoria') {
-        // Iniciar baja provisoria
+      // Lógica de licencia — genera eventos ARCA automáticos
+      if ((nuevoEstado === 'licencia' || nuevoEstado === 'baja_provisoria') && prev.estado === 'activo') {
         const desde = document.getElementById('empBajaProvDesde').value || new Date().toISOString().split('T')[0];
-        const motivo = document.getElementById('empBajaProvMotivo').value || 'Sin especificar';
+        const motivo = document.getElementById('empBajaProvMotivo').value || (nuevoEstado === 'licencia' ? 'Licencia' : 'Baja provisoria');
         if (!data.bajasProvisoriasHistory) data.bajasProvisoriasHistory = prev.bajasProvisoriasHistory || [];
         data.bajasProvisoriasHistory.push({ desde, hasta: null, motivo });
         data.bajaProvActiva = true;
-        logAudit('BAJA_PROV', `Baja provisoria: ${nombre} (${cuil}) — Motivo: ${motivo}`);
-      } else if (nuevoEstado === 'activo' && prev.estado === 'baja_provisoria') {
-        // Reactivar — cerrar la baja provisoria activa
+        data.licenciaDesde = desde;
+        // Auto ARCA event
+        if (!data.historialArca) data.historialArca = prev.historialArca || [];
+        data.historialArca.push({ id: uuid(), tipo: 'Baja', fecha: desde, motivo: motivo, observaciones: 'Generado automáticamente al cambiar estado' });
+        logAudit(nuevoEstado === 'licencia' ? 'LICENCIA' : 'BAJA_PROV', `${nuevoEstado === 'licencia' ? 'Licencia' : 'Baja provisoria'}: ${nombre} (${cuil}) — Motivo: ${motivo}`);
+      } else if (nuevoEstado === 'activo' && (prev.estado === 'baja_provisoria' || prev.estado === 'licencia')) {
+        // Reactivar — cerrar la baja/licencia activa
         data.bajasProvisoriasHistory = prev.bajasProvisoriasHistory || [];
         const bajaActiva = data.bajasProvisoriasHistory.find(b => !b.hasta);
         if (bajaActiva) {
           bajaActiva.hasta = new Date().toISOString().split('T')[0];
         }
         data.bajaProvActiva = false;
+        data.licenciaDesde = '';
+        // Auto ARCA event
+        if (!data.historialArca) data.historialArca = prev.historialArca || [];
+        data.historialArca.push({ id: uuid(), tipo: 'Alta', fecha: new Date().toISOString().split('T')[0], motivo: 'Reincorporación', observaciones: 'Generado automáticamente al reactivar' });
         const mesesPausados = calcMesesPausados(data.bajasProvisoriasHistory);
         logAudit('REACTIVACION', `Reactivado: ${nombre} (${cuil}) — ${mesesPausados} meses pausados acumulados`);
-        toast(`Empleado reactivado. Se descontarán ${mesesPausados} meses de la antigüedad.`, 'info');
+        toast(`Empleado reactivado. Se registró el alta automática en ARCA.`, 'info');
       } else {
         data.bajasProvisoriasHistory = prev.bajasProvisoriasHistory || [];
         data.bajaProvActiva = prev.bajaProvActiva || false;
+        data.licenciaDesde = prev.licenciaDesde || '';
+        data.historialArca = prev.historialArca || [];
       }
       state.empleados[idx] = { ...prev, ...data };
     }
@@ -1308,6 +1485,12 @@ function saveEmpleado() {
     data.id = uuid();
     data.bajasProvisoriasHistory = [];
     data.bajaProvActiva = false;
+    data.licenciaDesde = '';
+    data.historialArca = [];
+    // Auto ARCA Alta event on creation
+    if (data.fechaAlta) {
+      data.historialArca.push({ id: uuid(), tipo: 'Alta', fecha: data.fechaAlta, motivo: 'Alta inicial', observaciones: 'Generado automáticamente al crear empleado' });
+    }
     state.empleados.push(data);
     logAudit('ADD_EMP', `Alta: ${nombre} (${cuil})`);
     toast('Empleado agregado', 'success');
@@ -1336,23 +1519,30 @@ function renderEmpleados() {
   const tbody = document.getElementById('empTableBody');
   if (!tbody) return;
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty-state"><div class="empty-icon">👥</div><h4>No hay empleados cargados</h4><p>Agregá empleados manualmente o importalos desde un archivo CSV.</p></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="empty-state"><div class="empty-icon">👥</div><h4>No hay empleados cargados</h4><p>Agregá empleados manualmente o importalos desde un archivo CSV.</p></td></tr>';
     return;
   }
   tbody.innerHTML = filtered.map(e => {
     const ant = calcAntiguedad(e.fechaAlta, e);
     const revistas = { TIT:'Titular', INT:'Interino', SUP:'Suplente', CON:'Contratado', PROV:'Provisional' };
-    const estadoLabels = { activo:'Activo', baja:'De Baja', baja_provisoria:'Baja Prov.' };
-    const estadoBadge = e.estado==='activo'?'badge-success': e.estado==='baja_provisoria'?'badge-warning':'badge-danger';
-    return `<tr class="${e.estado==='baja'?'alert-row': e.estado==='baja_provisoria'?'':''}">
+    const estadoLabels = { activo:'Activo', baja:'De Baja', baja_provisoria:'Baja Prov.', licencia:'En Licencia' };
+    const estadoBadge = e.estado==='activo'?'badge-success': (e.estado==='baja_provisoria'||e.estado==='licencia')?'badge-warning':'badge-danger';
+    const nivelBadge = e.nivel==='Administrativos'?'badge-purple':'badge-info';
+    const arcaCount = (e.historialArca||[]).length;
+    const antDisplay = (e.estado === 'licencia' || e.estado === 'baja_provisoria')
+      ? `<span style="color:var(--warning);font-weight:600">⏸ Pausada</span><br><span style="font-size:0.7rem;color:var(--text-muted)">${ant.diasActivos || 0} días activos</span>`
+      : `${ant.anios}a ${ant.meses}m`;
+    return `<tr class="${e.estado==='baja'?'alert-row': (e.estado==='licencia'||e.estado==='baja_provisoria')?'':''}">
       <td class="mono">${e.cuil}</td>
       <td><strong>${e.nombre}</strong>${e.cargo ? '<br><span style="font-size:0.75rem;color:var(--text-muted)">'+e.cargo+'</span>' : ''}</td>
-      <td><span class="badge badge-info">${e.nivel}</span></td>
+      <td style="font-size:0.8rem;color:var(--text-secondary);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.direccion||''}">${e.direccion||'<span style="color:var(--text-muted)">—</span>'}</td>
+      <td><span class="badge ${nivelBadge}">${e.nivel}</span></td>
       <td>${e.horas}hs</td>
-      <td>${ant.anios}a ${ant.meses}m${ant.mesesPausados ? ' <span style="font-size:0.7rem;color:var(--warning)" title="Meses descontados por baja provisoria">(-'+ant.mesesPausados+'m)</span>' : ''}</td>
+      <td>${antDisplay}</td>
       <td>${revistas[e.revista]||e.revista}</td>
       <td>${e.jurisdiccion}</td>
-      <td><span class="badge ${estadoBadge}">${estadoLabels[e.estado]||e.estado}${e.estado==='baja_provisoria'?' ⏸️':''}</span></td>
+      <td><span class="badge ${estadoBadge}">${estadoLabels[e.estado]||e.estado}${(e.estado==='baja_provisoria'||e.estado==='licencia')?' ⏸️':''}</span></td>
+      <td><button class="btn btn-ghost btn-xs" onclick="openArcaModal('${e.id}')" title="Historial ARCA">📋 ${arcaCount>0?'<span class="mono" style="font-size:0.7rem">('+arcaCount+')</span>':''}</button></td>
       <td>
         ${ROLES_PERMISOS[state.role].canEdit ? `<button class="btn btn-ghost btn-xs" onclick='openEmpleadoModal(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✏️</button>` : ''}
         ${ROLES_PERMISOS[state.role].canDelete ? `<button class="btn btn-ghost btn-xs" onclick="deleteEmpleado('${e.id}')">🗑️</button>` : ''}
@@ -1466,19 +1656,20 @@ function renderAntiguedad() {
   const tbody = document.getElementById('antTableBody');
   const alertsDiv = document.getElementById('antAlerts');
   if (!tbody) return;
-  const relevantes = state.empleados.filter(e => (e.estado === 'activo' || e.estado === 'baja_provisoria') && (e.fechaAlta || e.antAA > 0));
+  const relevantes = state.empleados.filter(e => (e.estado === 'activo' || e.estado === 'baja_provisoria' || e.estado === 'licencia') && (e.fechaAlta || e.antAA > 0));
   let alertsHtml = '';
   let rows = relevantes.map(e => {
     const ant = calcAntiguedad(e.fechaAlta, e);
     const tramo = getTramoActual(ant.anios);
     const prox = getProximoTramo(ant.anios);
-    const diasFaltan = e.estado === 'baja_provisoria' ? null : diasParaProximoTramo(e.fechaAlta, e);
-    // Usar antPorc del Excel como % oficial si existe
+    const enPausa = (e.estado === 'licencia' || e.estado === 'baja_provisoria');
+    const diasFaltan = enPausa ? null : diasParaProximoTramo(e.fechaAlta, e);
     const porcOficial = e.antPorc || 0;
     const porcCalculado = tramo.pct;
-    let estadoBadge = '<span class="badge badge-success">OK</span>';
-    if (e.estado === 'baja_provisoria') {
-      estadoBadge = '<span class="badge badge-warning">⏸️ Pausada</span>';
+    const nivelBadge = e.nivel==='Administrativos'?'badge-purple':'badge-info';
+    let estadoBadge = '<span class="badge badge-success">✅ OK</span>';
+    if (enPausa) {
+      estadoBadge = '<span class="badge badge-licencia">⏸️ ' + (e.estado === 'licencia' ? 'Licencia' : 'Baja Prov.') + '</span>';
     } else if (porcOficial > 0 && Math.abs(porcOficial - porcCalculado) > 5) {
       estadoBadge = '<span class="badge badge-danger">⚠️ Revisar %</span>';
       alertsHtml += `<div class="alert alert-danger"><span class="alert-icon">⚠️</span><div><strong>${e.nombre}</strong> tiene <strong>${porcOficial}%</strong> en la planilla del liquidador, pero el cálculo da <strong>${porcCalculado}%</strong>. Verificar.</div></div>`;
@@ -1488,19 +1679,24 @@ function renderAntiguedad() {
     } else if (diasFaltan !== null && diasFaltan <= 0 && diasFaltan > -30) {
       estadoBadge = '<span class="badge badge-info">🆕 Cambió recientemente</span>';
     }
-    const pausaInfo = ant.mesesPausados ? `<br><span style="font-size:0.7rem;color:var(--warning)">(-${ant.mesesPausados}m pausados)</span>` : '';
-    return `<tr class="${e.estado==='baja_provisoria'?'alert-row':''}">
-      <td><strong>${e.nombre}</strong>${e.cargo ? '<br><span style="font-size:0.75rem;color:var(--text-muted)">'+e.cargo+'</span>' : ''}</td>
+    const diasActivos = ant.diasActivos || 0;
+    const diasActivosDisplay = enPausa 
+      ? `<span style="color:var(--warning);font-weight:600">${diasActivos}</span><br><span style="font-size:0.65rem;color:var(--warning)">PAUSADO</span>` 
+      : `<strong>${diasActivos}</strong>`;
+    return `<tr class="${enPausa?'alert-row':''}">
+      <td><strong>${e.nombre}</strong>${e.cargo ? '<br><span style="font-size:0.75rem;color:var(--text-muted)">'+e.cargo+'</span>' : ''}<br><span class="badge ${nivelBadge}" style="font-size:0.6rem">${e.nivel}</span></td>
       <td class="mono">${e.fechaAlta || '-'}</td>
-      <td>${e.antAA || ant.anios}${pausaInfo}</td><td>${e.antMM || ant.meses}</td><td>${ant.dias}</td>
+      <td class="mono" style="text-align:center">${diasActivosDisplay}</td>
+      <td>${e.antAA || ant.anios}</td><td>${e.antMM || ant.meses}</td><td>${ant.dias}</td>
       <td><strong>${porcOficial || porcCalculado}%</strong>${porcOficial && porcOficial !== porcCalculado ? '<br><span style="font-size:0.7rem;color:var(--text-muted)">Calc: '+porcCalculado+'%</span>' : ''}</td>
       <td>${prox ? prox.pct+'% (a los '+prox.anios+' años)' : 'Máximo alcanzado'}</td>
       <td>${diasFaltan !== null && diasFaltan > 0 ? diasFaltan+' días' : '-'}</td>
       <td>${estadoBadge}</td>
+      <td><button class="btn btn-ghost btn-xs" onclick="openArcaModal('${e.id}')" title="Ver historial ARCA">📋</button></td>
     </tr>`;
   });
   alertsDiv.innerHTML = alertsHtml;
-  tbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="9" class="empty-state"><div class="empty-icon">📅</div><h4>No hay empleados con fecha de alta cargada</h4></td></tr>';
+  tbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="11" class="empty-state"><div class="empty-icon">📅</div><h4>No hay empleados con fecha de alta cargada</h4></td></tr>';
 }
 
 // ============================================================
@@ -1539,7 +1735,7 @@ function calcSueldo(emp, periodo) {
 function generarRecibos() {
   const p = getSelectedPeriod('rec');
   const pk = periodKey(p.month, p.year);
-  const activos = state.empleados.filter(e => e.estado === 'activo');
+  const activos = state.empleados.filter(e => e.estado === 'activo' || e.estado === 'licencia');
   if (activos.length === 0) { toast('No hay empleados activos','warning'); return; }
   // Eliminar recibos previos del mismo período
   state.recibos = state.recibos.filter(r => r.periodo !== pk);
@@ -1711,13 +1907,13 @@ function renderAnomalias() {
 }
 
 // ============================================================
-// ABSENTISMO HEATMAP
+// AUSENTISMO HEATMAP
 // ============================================================
-function renderAbsentismo() {
+function renderAusentismo() {
   const year = parseInt(document.getElementById('absYear')?.value || new Date().getFullYear());
   const container = document.getElementById('heatmapContainer');
   if (!container) return;
-  const niveles = ['Media', 'Superior', 'Formacion'];
+  const niveles = ['Media', 'Superior', 'Formacion', 'Administrativos'];
   let data = {};
   niveles.forEach(n => { data[n] = new Array(12).fill(0); });
   state.novedades.filter(n => (n.tipo==='inasistencia'||n.tipo==='licencia') && n.periodo.startsWith(year+'')).forEach(n => {
@@ -1797,7 +1993,7 @@ function updateDashboard() {
   if (alertCount > 0) { badge.style.display = ''; badge.textContent = alertCount; }
   else { badge.style.display = 'none'; }
   // Distribución
-  const dist = { Media:0, Superior:0, Formacion:0 };
+  const dist = { Media:0, Superior:0, Formacion:0, Administrativos:0 };
   activos.forEach(e => dist[e.nivel] = (dist[e.nivel]||0) + 1);
   const total = activos.length || 1;
   document.getElementById('dashDistribucion').innerHTML = Object.entries(dist).map(([nivel, count]) => `
@@ -1847,6 +2043,165 @@ function renderAuditoria() {
       </div>
     </div>
   `).join('');
+}
+
+// ============================================================
+// ARCA MODAL (Historial de Altas y Bajas)
+// ============================================================
+let arcaCurrentEmpId = null;
+function openArcaModal(empId) {
+  const emp = state.empleados.find(e => e.id === empId);
+  if (!emp) { toast('Empleado no encontrado','error'); return; }
+  arcaCurrentEmpId = empId;
+  // Asegurar que exista historialArca
+  if (!emp.historialArca) emp.historialArca = [];
+  // Info del empleado
+  document.getElementById('arcaEmpInfo').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <strong style="font-size:1.1rem">${emp.nombre}</strong>
+        <span class="mono" style="margin-left:0.75rem;color:var(--text-muted)">${emp.cuil}</span>
+      </div>
+      <span class="badge ${emp.estado==='activo'?'badge-success':(emp.estado==='licencia'||emp.estado==='baja_provisoria')?'badge-warning':'badge-danger'}">${emp.estado==='activo'?'Activo':emp.estado==='licencia'?'En Licencia':emp.estado==='baja_provisoria'?'Baja Prov.':'De Baja'}</span>
+    </div>`;
+  // Summary
+  const diasActivos = calcDiasActivosArca(emp);
+  const anios = Math.floor(diasActivos / 365);
+  const pct = getTramoActual(anios).pct;
+  document.getElementById('arcaSummary').innerHTML = `
+    <div class="arca-stat"><div class="value mono" style="color:var(--primary)">${diasActivos}</div><div class="label">Días Activos ARCA</div></div>
+    <div class="arca-stat"><div class="value mono" style="color:var(--accent)">${anios}a ${Math.floor((diasActivos%365)/30)}m</div><div class="label">Antigüedad Efectiva</div></div>
+    <div class="arca-stat"><div class="value mono" style="color:var(--success)">${pct}%</div><div class="label">% Calculado (Ley 10.579)</div></div>`;
+  // Set default date
+  document.getElementById('arcaFecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('arcaMotivo').value = '';
+  document.getElementById('arcaObs').value = '';
+  // Hide form for readonly
+  document.getElementById('arcaFormSection').style.display = ROLES_PERMISOS[state.role].canEdit ? 'block' : 'none';
+  renderArcaTimeline(emp);
+  openModal('modalArca');
+}
+function saveArcaEvent() {
+  if (!arcaCurrentEmpId) return;
+  const tipo = document.getElementById('arcaTipo').value;
+  const fecha = document.getElementById('arcaFecha').value;
+  const motivo = document.getElementById('arcaMotivo').value.trim();
+  const obs = document.getElementById('arcaObs').value.trim();
+  if (!fecha || !motivo) { toast('Fecha y motivo son obligatorios','error'); return; }
+  const emp = state.empleados.find(e => e.id === arcaCurrentEmpId);
+  if (!emp) return;
+  if (!emp.historialArca) emp.historialArca = [];
+  emp.historialArca.push({ id: uuid(), tipo, fecha, motivo, observaciones: obs });
+  // Si es una Baja y está activo, pasar a licencia automáticamente
+  if (tipo === 'Baja' && emp.estado === 'activo') {
+    emp.estado = 'licencia';
+    emp.licenciaDesde = fecha;
+    if (!emp.bajasProvisoriasHistory) emp.bajasProvisoriasHistory = [];
+    emp.bajasProvisoriasHistory.push({ desde: fecha, hasta: null, motivo });
+    toast('Estado cambiado automáticamente a Licencia', 'info');
+  }
+  // Si es un Alta y está en licencia, reactivar
+  if (tipo === 'Alta' && (emp.estado === 'licencia' || emp.estado === 'baja_provisoria')) {
+    emp.estado = 'activo';
+    emp.licenciaDesde = '';
+    emp.bajaProvActiva = false;
+    const bajaActiva = (emp.bajasProvisoriasHistory||[]).find(b => !b.hasta);
+    if (bajaActiva) bajaActiva.hasta = fecha;
+    toast('Empleado reactivado automáticamente', 'success');
+  }
+  logAudit('ARCA_' + tipo.toUpperCase(), `ARCA ${tipo}: ${emp.nombre} (${emp.cuil}) — ${motivo}`);
+  saveState();
+  document.getElementById('arcaMotivo').value = '';
+  document.getElementById('arcaObs').value = '';
+  openArcaModal(arcaCurrentEmpId); // Refresh
+  toast(`${tipo} ARCA registrada`, 'success');
+}
+function renderArcaTimeline(emp) {
+  const container = document.getElementById('arcaTimeline');
+  const hist = [...(emp.historialArca || [])].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  if (hist.length === 0) {
+    container.innerHTML = '<div class="empty-state" style="padding:1.5rem"><div class="empty-icon">📋</div><h4>Sin registros ARCA</h4><p>Registrá la primera alta o baja de este empleado.</p></div>';
+    return;
+  }
+  container.innerHTML = hist.map(ev => {
+    const isAlta = ev.tipo === 'Alta';
+    const dotColor = isAlta ? 'background:var(--success)' : 'background:var(--danger)';
+    const badgeClass = isAlta ? 'badge-success' : 'badge-danger';
+    return `<div class="timeline-item">
+      <div class="timeline-dot" style="${dotColor};color:white">${isAlta ? '📗' : '📕'}</div>
+      <div class="timeline-content">
+        <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.25rem">
+          <span class="badge ${badgeClass}">${ev.tipo.toUpperCase()}</span>
+          <span class="mono" style="font-size:0.8rem;color:var(--text-secondary)">${ev.fecha ? new Date(ev.fecha+'T12:00:00').toLocaleDateString('es-AR') : '-'}</span>
+        </div>
+        <div style="font-weight:600;font-size:0.9rem">${ev.motivo}</div>
+        ${ev.observaciones ? '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.15rem">'+ev.observaciones+'</div>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// LIBRO DE DESIGNACIONES
+// ============================================================
+function renderDesignaciones() {
+  const search = (document.getElementById('desigSearch')?.value || '').toLowerCase();
+  const nivel = document.getElementById('desigFilterNivel')?.value || '';
+  let filtered = state.empleados;
+  if (search) filtered = filtered.filter(e => e.nombre.toLowerCase().includes(search) || e.cuil.includes(search));
+  if (nivel) filtered = filtered.filter(e => e.nivel === nivel);
+  const tbody = document.getElementById('desigTableBody');
+  if (!tbody) return;
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="12" class="empty-state"><div class="empty-icon">📋</div><h4>No hay designaciones</h4></td></tr>';
+    return;
+  }
+  const revistas = { TIT:'Titular', INT:'Interino', SUP:'Suplente', CON:'Contratado', PROV:'Provisional' };
+  const rows = filtered.map(e => {
+    const diasActivos = calcDiasActivosArca(e);
+    const ant = calcAntiguedad(e.fechaAlta, e);
+    const estadoBadge = e.estado==='activo'?'badge-success':(e.estado==='licencia'||e.estado==='baja_provisoria')?'badge-warning':'badge-danger';
+    const estadoLabel = e.estado==='activo'?'Activo':e.estado==='licencia'?'Licencia':e.estado==='baja_provisoria'?'B.Prov.':'Baja';
+    const nivelBadge = e.nivel==='Administrativos'?'badge-purple':'badge-info';
+    // Fecha de baja: última baja ARCA o estado baja
+    let fechaBaja = '-';
+    if (e.historialArca && e.historialArca.length) {
+      const ultimaBaja = [...e.historialArca].filter(h=>h.tipo==='Baja').sort((a,b)=>new Date(b.fecha)-new Date(a.fecha))[0];
+      if (ultimaBaja && (e.estado !== 'activo')) {
+        fechaBaja = ultimaBaja.fecha ? new Date(ultimaBaja.fecha+'T12:00:00').toLocaleDateString('es-AR') : '-';
+      }
+    }
+    return `<tr>
+      <td style="font-weight:600">${e.cargo || e.tipo || 'PRF'}</td>
+      <td><span class="badge ${nivelBadge}" style="font-size:0.6rem">${e.nivel}</span></td>
+      <td class="mono">${e.horas}hs</td>
+      <td>${e.categoria || '-'}</td>
+      <td><span class="badge ${estadoBadge}" style="font-size:0.6rem">${estadoLabel}</span> <span style="font-size:0.75rem">${revistas[e.revista]||e.revista}</span></td>
+      <td style="font-size:0.75rem">${e.p1 || '-'}</td>
+      <td style="font-size:0.75rem">${e.os || '-'}</td>
+      <td class="mono" style="color:var(--success)">${e.fechaAlta ? new Date(e.fechaAlta+'T12:00:00').toLocaleDateString('es-AR') : '-'}</td>
+      <td class="mono" style="color:${fechaBaja!=='-'?'var(--danger)':'var(--text-muted)'}">${fechaBaja}</td>
+      <td style="font-weight:600;font-size:0.8rem">${e.nombre}</td>
+      <td class="mono" style="font-size:0.75rem">${e.cuil}</td>
+      <td class="mono" style="text-align:center;font-weight:600">${diasActivos}<br><span style="font-size:0.65rem;color:var(--text-muted)">${ant.anios}a ${ant.meses}m</span></td>
+    </tr>`;
+  });
+  tbody.innerHTML = rows.join('');
+}
+function exportDesignaciones() {
+  const headers = ['CARGO','NIVEL','HORAS','CURSO_DIV','SIT_REVISTA','ESTADO','PLAN','OS','ALTA_FECHA','BAJA_FECHA','EMPLEADO','CUIL','DIAS_ACTIVOS'];
+  const revistas = { TIT:'Titular', INT:'Interino', SUP:'Suplente', CON:'Contratado', PROV:'Provisional' };
+  const rows = state.empleados.map(e => {
+    const diasActivos = calcDiasActivosArca(e);
+    let fechaBaja = '';
+    if (e.historialArca && e.historialArca.length) {
+      const ultimaBaja = [...e.historialArca].filter(h=>h.tipo==='Baja').sort((a,b)=>new Date(b.fecha)-new Date(a.fecha))[0];
+      if (ultimaBaja && e.estado !== 'activo') fechaBaja = ultimaBaja.fecha;
+    }
+    return [e.cargo||'',e.nivel,e.horas,e.categoria||'',revistas[e.revista]||e.revista,e.estado,e.p1||'',e.os||'',e.fechaAlta||'',fechaBaja,e.nombre,e.cuil,diasActivos];
+  });
+  downloadCSV(`libro_designaciones_${state.society}.csv`, headers, rows);
+  toast('Libro de Designaciones exportado','success');
 }
 
 // ============================================================
@@ -1957,8 +2312,11 @@ function executeImport() {
         antMM: parseInt(r['Ant. (meses)'] || r.antMM || r.AntMM || 0) || 0,
         antPorc: parseInt(r['Ant. Porc'] || r['% Ant'] || r.antPorc || r.AntPorc || 0) || 0,
         escalaAnt: r['Escala de antiguedad'] || r.escalaAnt || '',
+        direccion: r.Direccion || r.direccion || '',
         bajasProvisoriasHistory: [],
-        bajaProvActiva: false
+        bajaProvActiva: false,
+        licenciaDesde: '',
+        historialArca: altaCargo ? [{ id: uuid(), tipo: 'Alta', fecha: altaCargo, motivo: 'Alta inicial (importada)', observaciones: '' }] : []
       });
       count++;
     });
@@ -2007,8 +2365,8 @@ function downloadCSV(filename, headers, rows) {
 }
 
 function exportEmpleadosCSV() {
-  const headers = ['CUIL','Nombre','Cargo','Nivel','Tipo','Horas','FechaAltaCargo','AltaEstab','SitRevista','Categoria','Jurisdiccion','Estado','Jubilacion','ObraSocial','OS_Codigo','P1','AntAA','AntMM','AntPorc'];
-  const rows = state.empleados.map(e => [e.cuil,e.nombre,e.cargo||'',e.nivel,e.tipo||'',e.horas,e.fechaAlta,e.altaEstab||'',e.revista,e.categoria||'',e.jurisdiccion,e.estado,e.jubilacion,e.obraSocial,e.os||'',e.p1||'',e.antAA||0,e.antMM||0,e.antPorc||0]);
+  const headers = ['CUIL','Nombre','Direccion','Cargo','Nivel','Tipo','Horas','FechaAltaCargo','AltaEstab','SitRevista','Categoria','Jurisdiccion','Estado','Jubilacion','ObraSocial','OS_Codigo','P1','AntAA','AntMM','AntPorc'];
+  const rows = state.empleados.map(e => [e.cuil,e.nombre,e.direccion||'',e.cargo||'',e.nivel,e.tipo||'',e.horas,e.fechaAlta,e.altaEstab||'',e.revista,e.categoria||'',e.jurisdiccion,e.estado,e.jubilacion,e.obraSocial,e.os||'',e.p1||'',e.antAA||0,e.antMM||0,e.antPorc||0]);
   downloadCSV('empleados_'+state.society+'.csv', headers, rows);
   toast('Nómina exportada','success');
 }
@@ -2170,7 +2528,9 @@ function handleBackupRestore(e) {
                 tipo: c.tipo || 'DOCENTE', p1: c.p1 || '',
                 altaEstab: c.altaEstab || '', os: c.os || '',
                 antAA: c.antAA || 0, antMM: c.antMM || 0, antPorc: c.antPorc || 0,
-                bajasProvisoriasHistory: [], bajaProvActiva: false
+                direccion: '',
+                bajasProvisoriasHistory: [], bajaProvActiva: false, licenciaDesde: '',
+                historialArca: c.altaCargo ? [{ id: Date.now().toString(36)+Math.random().toString(36).substr(2,3), tipo: 'Alta', fecha: c.altaCargo, motivo: 'Alta inicial', observaciones: '' }] : []
               });
             });
             const state = { society: soc, empleados: empleados, novedades: [], recibos: [], firmas: {}, auditLog: [] };
