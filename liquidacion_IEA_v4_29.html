@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liquidación de Sueldos IEA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1a5c3a;
+  --primary-light: #228B52;
+  --primary-dark: #0f3d26;
+  --primary-glow: rgba(26,92,58,0.12);
+  --accent: #d4a030;
+  --accent-light: #f0c850;
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --surface-alt: #f8faf9;
+  --border: #e2e8f0;
+  --border-light: #edf2f7;
+  --text: #1a202c;
+  --text-secondary: #4a5568;
+  --text-muted: #a0aec0;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+  --transition: all 0.2s ease;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+.mono { font-family:'JetBrains Mono',monospace; }
+
+/* LOGIN SCREEN */
+.login-screen {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background: linear-gradient(135deg, #0f3d26 0%, #1a5c3a 40%, #228B52 100%);
+  position: relative; overflow: hidden;
+}
+.login-screen::before {
+  content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%;
+  background: radial-gradient(circle at 30% 50%, rgba(212,160,48,0.08) 0%, transparent 50%),
+              radial-gradient(circle at 70% 30%, rgba(255,255,255,0.04) 0%, transparent 40%);
+}
+.login-box {
+  background: rgba(255,255,255,0.97); border-radius:20px; padding:3rem; width:420px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.3); position:relative; z-index:1;
+  backdrop-filter: blur(20px);
+}
+.login-logo { text-align:center; margin-bottom:2rem; }
+.login-logo h1 { font-size:1.5rem; color:var(--primary); font-weight:700; letter-spacing:-0.5px; }
+.login-logo .subtitle { font-size:0.85rem; color:var(--text-muted); margin-top:0.25rem; }
+.login-logo .badge { display:inline-block; background:var(--primary-glow); color:var(--primary); padding:0.25rem 0.75rem; border-radius:20px; font-size:0.7rem; font-weight:600; margin-top:0.5rem; text-transform:uppercase; letter-spacing:1px; }
+.form-group { margin-bottom:1.25rem; }
+.form-group label { display:block; font-size:0.8rem; font-weight:600; color:var(--text-secondary); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.5px; }
+.form-input {
+  width:100%; padding:0.75rem 1rem; border:2px solid var(--border); border-radius:var(--radius-sm);
+  font-family:inherit; font-size:0.95rem; transition:var(--transition); background:var(--surface-alt);
+}
+.form-input:focus { outline:none; border-color:var(--primary); background:var(--surface); box-shadow:0 0 0 4px var(--primary-glow); }
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:0.5rem;
+  padding:0.75rem 1.5rem; border:none; border-radius:var(--radius-sm);
+  font-family:inherit; font-size:0.9rem; font-weight:600; cursor:pointer;
+  transition:var(--transition); text-decoration:none;
+}
+.btn-primary { background:var(--primary); color:white; width:100%; }
+.btn-primary:hover { background:var(--primary-dark); transform:translateY(-1px); box-shadow:var(--shadow); }
+.btn-secondary { background:var(--surface); color:var(--text); border:2px solid var(--border); }
+.btn-secondary:hover { border-color:var(--primary); color:var(--primary); }
+.btn-accent { background:var(--accent); color:white; }
+.btn-accent:hover { background:#c49028; }
+.btn-danger { background:var(--danger); color:white; }
+.btn-danger:hover { background:#dc2626; }
+.btn-ghost { background:transparent; color:var(--text-secondary); padding:0.5rem 0.75rem; }
+.btn-ghost:hover { background:var(--surface-alt); color:var(--text); }
+.btn-sm { padding:0.4rem 0.8rem; font-size:0.8rem; }
+.btn-xs { padding:0.25rem 0.5rem; font-size:0.75rem; border-radius:6px; }
+.btn-icon { width:36px; height:36px; padding:0; border-radius:var(--radius-sm); }
+
+/* MAIN LAYOUT */
+.app-container { display:none; min-height:100vh; }
+.sidebar {
+  position:fixed; top:0; left:0; width:260px; height:100vh; background:var(--primary-dark);
+  color:white; z-index:50; display:flex; flex-direction:column; overflow-y:auto;
+  box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+}
+.sidebar-header { padding:1.5rem; border-bottom:1px solid rgba(255,255,255,0.1); }
+.sidebar-header h1 { font-size:1.1rem; font-weight:700; letter-spacing:-0.3px; }
+.sidebar-header .org { font-size:0.75rem; opacity:0.6; margin-top:0.25rem; }
+.sidebar-nav { flex:1; padding:1rem 0.75rem; }
+.nav-section { margin-bottom:1.5rem; }
+.nav-section-title { font-size:0.65rem; text-transform:uppercase; letter-spacing:1.5px; opacity:0.4; padding:0 0.75rem; margin-bottom:0.5rem; font-weight:600; }
+.nav-item {
+  display:flex; align-items:center; gap:0.75rem; padding:0.65rem 0.75rem;
+  border-radius:var(--radius-sm); cursor:pointer; transition:var(--transition);
+  font-size:0.88rem; color:rgba(255,255,255,0.7); font-weight:500;
+}
+.nav-item:hover { background:rgba(255,255,255,0.08); color:white; }
+.nav-item.active { background:rgba(255,255,255,0.15); color:white; font-weight:600; }
+.nav-item .nav-icon { width:20px; text-align:center; font-size:1rem; }
+.nav-item .nav-badge {
+  margin-left:auto; background:var(--danger); color:white; font-size:0.65rem;
+  padding:0.1rem 0.45rem; border-radius:10px; font-weight:700;
+}
+.sidebar-footer { padding:1rem 1.25rem; border-top:1px solid rgba(255,255,255,0.1); }
+.user-info { display:flex; align-items:center; gap:0.75rem; }
+.user-avatar {
+  width:36px; height:36px; border-radius:50%; background:var(--accent);
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; color:white;
+}
+.user-name { font-size:0.85rem; font-weight:600; }
+.user-role { font-size:0.7rem; opacity:0.5; }
+
+/* MAIN CONTENT */
+.main-content { margin-left:260px; padding:2rem; min-height:100vh; }
+.page-header { margin-bottom:2rem; }
+.page-title { font-size:1.75rem; font-weight:700; letter-spacing:-0.5px; color:var(--text); }
+.page-subtitle { font-size:0.9rem; color:var(--text-muted); margin-top:0.25rem; }
+
+/* CARDS */
+.card {
+  background:var(--surface); border-radius:var(--radius); border:1px solid var(--border-light);
+  box-shadow:var(--shadow-sm); overflow:hidden; transition:var(--transition);
+}
+.card:hover { box-shadow:var(--shadow); }
+.card-header {
+  padding:1.25rem 1.5rem; border-bottom:1px solid var(--border-light);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.card-header h3 { font-size:1rem; font-weight:600; }
+.card-body { padding:1.5rem; }
+.card-body.compact { padding:1rem; }
+
+/* STAT CARDS */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:2rem; }
+.stat-card {
+  background:var(--surface); border-radius:var(--radius); padding:1.25rem 1.5rem;
+  border:1px solid var(--border-light); box-shadow:var(--shadow-sm);
+  display:flex; align-items:flex-start; gap:1rem; transition:var(--transition);
+}
+.stat-card:hover { transform:translateY(-2px); box-shadow:var(--shadow); }
+.stat-icon {
+  width:48px; height:48px; border-radius:var(--radius-sm); display:flex; align-items:center;
+  justify-content:center; font-size:1.3rem; flex-shrink:0;
+}
+.stat-icon.green { background:rgba(34,197,94,0.1); color:var(--success); }
+.stat-icon.blue { background:rgba(59,130,246,0.1); color:var(--info); }
+.stat-icon.amber { background:rgba(245,158,11,0.1); color:var(--warning); }
+.stat-icon.red { background:rgba(239,68,68,0.1); color:var(--danger); }
+.stat-value { font-size:1.75rem; font-weight:700; line-height:1.2; }
+.stat-label { font-size:0.8rem; color:var(--text-muted); }
+.stat-change { font-size:0.75rem; margin-top:0.25rem; }
+.stat-change.up { color:var(--success); }
+.stat-change.down { color:var(--danger); }
+
+/* TABLES */
+.table-wrapper { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+thead th {
+  background:var(--surface-alt); padding:0.75rem 1rem; text-align:left; font-weight:600;
+  font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary);
+  border-bottom:2px solid var(--border);
+}
+tbody td { padding:0.75rem 1rem; border-bottom:1px solid var(--border-light); vertical-align:middle; }
+tbody tr:hover { background:var(--surface-alt); }
+tbody tr.alert-row { background:rgba(239,68,68,0.04); }
+tbody tr.alert-row:hover { background:rgba(239,68,68,0.08); }
+
+/* TABS */
+.tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:1.5rem; }
+.tab {
+  padding:0.75rem 1.25rem; cursor:pointer; font-size:0.88rem; font-weight:500;
+  color:var(--text-muted); transition:var(--transition); border-bottom:2px solid transparent;
+  margin-bottom:-2px;
+}
+.tab:hover { color:var(--text); }
+.tab.active { color:var(--primary); border-bottom-color:var(--primary); font-weight:600; }
+
+/* BADGES & TAGS */
+.badge {
+  display:inline-flex; align-items:center; padding:0.2rem 0.6rem; border-radius:20px;
+  font-size:0.7rem; font-weight:600; text-transform:uppercase; letter-spacing:0.3px;
+}
+.badge-success { background:rgba(34,197,94,0.1); color:#16a34a; }
+.badge-danger { background:rgba(239,68,68,0.1); color:#dc2626; }
+.badge-warning { background:rgba(245,158,11,0.1); color:#d97706; }
+.badge-info { background:rgba(59,130,246,0.1); color:#2563eb; }
+.badge-neutral { background:var(--surface-alt); color:var(--text-secondary); }
+
+/* ALERTS */
+.alert {
+  padding:1rem 1.25rem; border-radius:var(--radius-sm); margin-bottom:1rem;
+  display:flex; align-items:flex-start; gap:0.75rem; font-size:0.88rem;
+}
+.alert-icon { font-size:1.2rem; flex-shrink:0; margin-top:0.1rem; }
+.alert-danger { background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); color:#991b1b; }
+.alert-warning { background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); color:#92400e; }
+.alert-success { background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2); color:#166534; }
+.alert-info { background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); color:#1e40af; }
+
+/* MODAL */
+.modal-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200;
+  backdrop-filter:blur(4px); align-items:center; justify-content:center;
+}
+.modal-overlay.active { display:flex; }
+.modal {
+  background:var(--surface); border-radius:var(--radius); width:90%; max-width:700px;
+  max-height:85vh; overflow-y:auto; box-shadow:var(--shadow-lg);
+}
+.modal-header {
+  padding:1.25rem 1.5rem; border-bottom:1px solid var(--border-light);
+  display:flex; align-items:center; justify-content:space-between; position:sticky; top:0;
+  background:var(--surface); z-index:1;
+}
+.modal-header h3 { font-size:1.1rem; font-weight:600; }
+.modal-body { padding:1.5rem; }
+.modal-footer { padding:1rem 1.5rem; border-top:1px solid var(--border-light); display:flex; justify-content:flex-end; gap:0.75rem; }
+
+/* FORM ELEMENTS */
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
+.form-row.three { grid-template-columns:1fr 1fr 1fr; }
+select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a5568' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 1rem center; padding-right:2.5rem; }
+
+/* HEATMAP */
+.heatmap { display:grid; gap:2px; }
+.heatmap-cell {
+  aspect-ratio:1; border-radius:4px; display:flex; align-items:center; justify-content:center;
+  font-size:0.65rem; font-weight:600; color:white; transition:var(--transition); cursor:pointer;
+}
+.heatmap-cell:hover { transform:scale(1.15); z-index:1; }
+.heat-0 { background:#e8f5e9; color:#388e3c; }
+.heat-1 { background:#c8e6c9; color:#2e7d32; }
+.heat-2 { background:#fff9c4; color:#f57f17; }
+.heat-3 { background:#ffcc80; color:#e65100; }
+.heat-4 { background:#ef9a9a; color:#b71c1c; }
+.heat-5 { background:#e53935; color:white; }
+
+/* TOOLBAR */
+.toolbar { display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+.toolbar-group { display:flex; align-items:center; gap:0.5rem; }
+.search-input {
+  padding:0.6rem 1rem 0.6rem 2.5rem; border:2px solid var(--border); border-radius:var(--radius-sm);
+  font-family:inherit; font-size:0.88rem; background:var(--surface); transition:var(--transition);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a0aec0' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:0.75rem center; min-width:250px;
+}
+.search-input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 4px var(--primary-glow); }
+.filter-select {
+  padding:0.6rem 2rem 0.6rem 0.75rem; border:2px solid var(--border); border-radius:var(--radius-sm);
+  font-family:inherit; font-size:0.85rem; background:var(--surface); appearance:none; cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a5568' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 0.75rem center;
+}
+
+/* TOAST */
+.toast-container { position:fixed; bottom:2rem; right:2rem; z-index:300; display:flex; flex-direction:column; gap:0.5rem; }
+.toast {
+  padding:0.85rem 1.25rem; border-radius:var(--radius-sm); color:white;
+  font-size:0.85rem; font-weight:500; box-shadow:var(--shadow-lg);
+  animation:slideIn 0.3s ease; display:flex; align-items:center; gap:0.5rem;
+}
+.toast-success { background:#16a34a; }
+.toast-error { background:#dc2626; }
+.toast-warning { background:#d97706; }
+.toast-info { background:#2563eb; }
+@keyframes slideIn { from { opacity:0; transform:translateX(100px); } to { opacity:1; transform:translateX(0); } }
+
+/* GUIDE BOX */
+.guide-box {
+  background:linear-gradient(135deg, var(--primary-glow) 0%, rgba(59,130,246,0.06) 100%);
+  border:1px solid rgba(26,92,58,0.15); border-radius:var(--radius); padding:1.25rem 1.5rem;
+  margin-bottom:1.5rem;
+}
+.guide-box h4 { color:var(--primary); font-size:0.9rem; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.5rem; }
+.guide-box p { color:var(--text-secondary); font-size:0.85rem; line-height:1.6; }
+.guide-steps { list-style:none; counter-reset:step; margin-top:0.75rem; }
+.guide-steps li { counter-increment:step; display:flex; align-items:flex-start; gap:0.75rem; margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-secondary); }
+.guide-steps li::before { content:counter(step); background:var(--primary); color:white; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; flex-shrink:0; }
+
+/* PROGRESS */
+.progress-bar { height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:3px; transition:width 0.5s ease; }
+.progress-fill.green { background:var(--success); }
+.progress-fill.amber { background:var(--warning); }
+.progress-fill.red { background:var(--danger); }
+
+/* RESPONSIVE */
+@media(max-width:1024px) {
+  .sidebar { width:220px; }
+  .main-content { margin-left:220px; }
+}
+@media(max-width:768px) {
+  .sidebar { display:none; }
+  .main-content { margin-left:0; }
+  .form-row { grid-template-columns:1fr; }
+  .form-row.three { grid-template-columns:1fr; }
+  .stats-grid { grid-template-columns:1fr 1fr; }
+}
+
+/* SIGNATURE PANEL */
+.signature-panel {
+  background:linear-gradient(135deg, #fefce8, #fef3c7); border:2px dashed var(--accent);
+  border-radius:var(--radius); padding:1.5rem; text-align:center;
+}
+.signature-panel.signed {
+  background:linear-gradient(135deg, #f0fdf4, #dcfce7); border-color:var(--success); border-style:solid;
+}
+
+/* EMPTY STATE */
+.empty-state { text-align:center; padding:3rem; color:var(--text-muted); }
+.empty-state .empty-icon { font-size:3rem; margin-bottom:1rem; opacity:0.5; }
+.empty-state h4 { color:var(--text-secondary); margin-bottom:0.5rem; }
+
+/* SECTION DIVIDER */
+.section-divider { margin:2rem 0; border:none; border-top:1px solid var(--border); }
+
+/* COLLAPSIBLE */
+.collapsible-header { cursor:pointer; display:flex; align-items:center; justify-content:space-between; }
+.collapsible-header .arrow { transition:transform 0.2s; }
+.collapsible-header.open .arrow { transform:rotate(180deg); }
+.collapsible-body { overflow:hidden; max-height:0; transition:max-height 0.3s ease; }
+.collapsible-body.open { max-height:2000px; }
+
+/* TIMELINE */
+.timeline-item { display:flex; gap:1rem; padding-bottom:1.5rem; position:relative; }
+.timeline-item::before { content:''; position:absolute; left:15px; top:28px; bottom:0; width:2px; background:var(--border); }
+.timeline-item:last-child::before { display:none; }
+.timeline-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.85rem; flex-shrink:0; z-index:1; }
+.timeline-content { flex:1; }
+.timeline-content .time { font-size:0.75rem; color:var(--text-muted); }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- ==================== LOGIN SCREEN ==================== -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div style="font-size:2.5rem;margin-bottom:0.5rem">📋</div>
+      <h1>Liquidación de Sueldos IEA</h1>
+      <div class="subtitle">Sistema de Gestión de Haberes</div>
+      <div class="badge">CFPEA SRL · ISFTEA SRL</div>
+    </div>
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" class="form-input" id="loginUser" placeholder="Ingrese su usuario" value="admin">
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" class="form-input" id="loginPass" placeholder="Ingrese su contraseña" value="admin">
+    </div>
+    <div class="form-group">
+      <label>Sociedad</label>
+      <select class="form-input" id="loginSociety">
+        <option value="CFPEA">CFPEA SRL</option>
+        <option value="ISFTEA">ISFTEA SRL</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="doLogin()" style="margin-top:0.5rem">
+      Ingresar al Sistema
+    </button>
+    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
+      <p style="font-size:0.75rem;color:var(--text-muted);text-align:center">
+        Usuarios de prueba: <strong>admin/admin</strong> (Administrador) · <strong>editor/editor</strong> (Editor) · <strong>auditor/auditor</strong> (Solo lectura)
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div class="app-container" id="appContainer">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>📋 Liquidación IEA</h1>
+      <div class="org" id="sidebarSociety">CFPEA SRL</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">General</div>
+        <div class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+          <span class="nav-icon">📊</span> Dashboard
+          <span class="nav-badge" id="alertBadge" style="display:none">0</span>
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Gestión de Personal</div>
+        <div class="nav-item" data-page="empleados" onclick="navigateTo('empleados')">
+          <span class="nav-icon">👥</span> Empleados
+        </div>
+        <div class="nav-item" data-page="novedades" onclick="navigateTo('novedades')">
+          <span class="nav-icon">📝</span> Novedades Mensuales
+        </div>
+        <div class="nav-item" data-page="antiguedad" onclick="navigateTo('antiguedad')">
+          <span class="nav-icon">📅</span> Antigüedad
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Liquidación</div>
+        <div class="nav-item" data-page="recibos" onclick="navigateTo('recibos')">
+          <span class="nav-icon">🧾</span> Recibos de Sueldo
+        </div>
+        <div class="nav-item" data-page="lsd" onclick="navigateTo('lsd')">
+          <span class="nav-icon">📄</span> Libro Sueldos Digital
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Análisis</div>
+        <div class="nav-item" data-page="anomalias" onclick="navigateTo('anomalias')">
+          <span class="nav-icon">⚠️</span> Detección Anomalías
+        </div>
+        <div class="nav-item" data-page="absentismo" onclick="navigateTo('absentismo')">
+          <span class="nav-icon">🗓️</span> Absentismo
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Sistema</div>
+        <div class="nav-item" data-page="importexport" onclick="navigateTo('importexport')">
+          <span class="nav-icon">📥</span> Importar / Exportar
+        </div>
+        <div class="nav-item" data-page="auditoria" onclick="navigateTo('auditoria')">
+          <span class="nav-icon">🔒</span> Auditoría
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <div>
+          <div class="user-name" id="userName">Admin</div>
+          <div class="user-role" id="userRole">Administrador</div>
+        </div>
+        <button class="btn btn-ghost btn-icon" onclick="doLogout()" title="Cerrar sesión" style="margin-left:auto;color:rgba(255,255,255,0.5)">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <main class="main-content">
+
+    <!-- ====== DASHBOARD ====== -->
+    <div class="page" id="page-dashboard">
+      <div class="page-header">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div class="page-title">Dashboard</div>
+            <div class="page-subtitle">Resumen general — <span id="dashPeriod"></span></div>
+          </div>
+          <div class="toolbar-group">
+            <select class="filter-select" id="dashMonth" onchange="updateDashboard()"></select>
+            <select class="filter-select" id="dashYear" onchange="updateDashboard()"></select>
+          </div>
+        </div>
+      </div>
+
+      <div id="dashAlerts"></div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon green">👥</div>
+          <div>
+            <div class="stat-value" id="statEmpleados">0</div>
+            <div class="stat-label">Empleados Activos</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">💰</div>
+          <div>
+            <div class="stat-value" id="statMasaSalarial">$0</div>
+            <div class="stat-label">Masa Salarial Bruta</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon amber">📝</div>
+          <div>
+            <div class="stat-value" id="statNovedades">0</div>
+            <div class="stat-label">Novedades del Mes</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">⚠️</div>
+          <div>
+            <div class="stat-value" id="statAlertas">0</div>
+            <div class="stat-label">Alertas Activas</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div class="card">
+          <div class="card-header"><h3>Distribución por Nivel</h3></div>
+          <div class="card-body" id="dashDistribucion"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Próximos Cambios de Escalafón</h3></div>
+          <div class="card-body" id="dashEscalafon"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== EMPLEADOS ====== -->
+    <div class="page" id="page-empleados" style="display:none">
+      <div class="page-header">
+        <div class="page-title">Empleados</div>
+        <div class="page-subtitle">Gestión del personal docente y administrativo</div>
+      </div>
+      <div class="guide-box">
+        <h4>💡 ¿Cómo funciona esta sección?</h4>
+        <p>Aquí gestionás la ficha permanente de cada empleado. Los datos que cargues acá se usan como base para las liquidaciones mensuales.</p>
+        <ol class="guide-steps">
+          <li>Cargá empleados manualmente o importalos desde un archivo CSV/Excel en la sección <strong>Importar/Exportar</strong>.</li>
+          <li>Cada empleado puede tener múltiples cargos (ej: un docente con horas en Media y Superior).</li>
+          <li>La antigüedad se calcula automáticamente desde la fecha de alta.</li>
+        </ol>
+      </div>
+      <div class="toolbar">
+        <input type="text" class="search-input" id="empSearch" placeholder="Buscar por nombre, CUIL o nivel..." oninput="renderEmpleados()">
+        <select class="filter-select" id="empFilterNivel" onchange="renderEmpleados()">
+          <option value="">Todos los niveles</option>
+          <option value="Media">Media</option>
+          <option value="Superior">Superior</option>
+          <option value="Formacion">Formación</option>
+        </select>
+        <select class="filter-select" id="empFilterEstado" onchange="renderEmpleados()">
+          <option value="">Todos</option>
+          <option value="activo">Activos</option>
+          <option value="baja">De baja</option>
+        </select>
+        <div style="flex:1"></div>
+        <button class="btn btn-primary btn-sm" onclick="openEmpleadoModal()" id="btnAddEmp">➕ Nuevo Empleado</button>
+      </div>
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>CUIL</th>
+                <th>Nombre</th>
+                <th>Nivel</th>
+                <th>Horas</th>
+                <th>Antigüedad</th>
+                <th>Sit. Revista</th>
+                <th>Jurisdicción</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="empTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== NOVEDADES ====== -->
+    <div class="page" id="page-novedades" style="display:none">
+      <div class="page-header">
+        <div class="page-title">Novedades Mensuales</div>
+        <div class="page-subtitle">Registrá las novedades que afectan la liquidación del mes</div>
+      </div>
+      <div class="guide-box">
+        <h4>💡 ¿Qué son las novedades?</h4>
+        <p>Las novedades son los cambios que ocurren cada mes y que afectan el sueldo: inasistencias, horas extras, licencias, cambios de cargo, etc. Se cargan mes a mes y quedan registradas para auditoría.</p>
+        <ol class="guide-steps">
+          <li>Seleccioná el período (mes/año) para el que cargás novedades.</li>
+          <li>Elegí un empleado y cargá las novedades correspondientes.</li>
+          <li>Una vez completo, firmá digitalmente el lote para enviarlo a liquidación.</li>
+        </ol>
+      </div>
+      <div class="toolbar">
+        <select class="filter-select" id="novMonth" onchange="renderNovedades()"></select>
+        <select class="filter-select" id="novYear" onchange="renderNovedades()"></select>
+        <div style="flex:1"></div>
+        <button class="btn btn-secondary btn-sm" onclick="openNovedadModal()" id="btnAddNov">📝 Nueva Novedad</button>
+        <button class="btn btn-accent btn-sm" onclick="firmarLoteNovedades()" id="btnFirmar">✍️ Firmar Lote</button>
+      </div>
+      <div id="firmaStatusPanel"></div>
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Empleado</th>
+                <th>Tipo</th>
+                <th>Concepto</th>
+                <th>Detalle</th>
+                <th>Monto/Cant.</th>
+                <th>Cargado por</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="novTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== ANTIGÜEDAD ====== -->
+    <div class="page" id="page-antiguedad" style="display:none">
+      <div class="page-header">
+        <div class="page-title">Control de Antigüedad</div>
+        <div class="page-subtitle">Cálculo automático y alertas de cambio de escalafón</div>
+      </div>
+      <div class="guide-box">
+        <h4>💡 ¿Cómo funciona el cálculo de antigüedad?</h4>
+        <p>El sistema calcula la antigüedad docente de forma acumulativa considerando la fecha de alta en la institución. Genera alertas automáticas cuando un empleado está próximo a cambiar de tramo salarial (30 días antes), para que puedas anticipar el impacto en la liquidación.</p>
+      </div>
+      <div id="antAlerts"></div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Tabla de Antigüedades</h3>
+          <button class="btn btn-secondary btn-sm" onclick="exportAntiguedades()">📥 Exportar</button>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Empleado</th>
+                <th>Fecha Alta</th>
+                <th>Años</th>
+                <th>Meses</th>
+                <th>Días</th>
+                <th>% Actual</th>
+                <th>Próximo Tramo</th>
+                <th>Faltan</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="antTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== RECIBOS ====== -->
+    <div class="page" id="page-recibos" style="display:none">
+      <div class="page-header">
+        <div class="page-title">Recibos de Sueldo</div>
+        <div class="page-subtitle">Generación y visualización de recibos mensuales</div>
+      </div>
+      <div class="guide-box">
+        <h4>💡 ¿Cómo generar recibos?</h4>
+        <ol class="guide-steps">
+          <li>Seleccioná el período y asegurate de que las novedades del mes estén cargadas y firmadas.</li>
+          <li>Hacé clic en "Generar Recibos" para calcular todos los haberes del mes.</li>
+          <li>Revisá los recibos y exportalos individualmente o en lote.</li>
+        </ol>
+      </div>
+      <div class="toolbar">
+        <select class="filter-select" id="recMonth" onchange="renderRecibos()"></select>
+        <select class="filter-select" id="recYear" onchange="renderRecibos()"></select>
+        <div style="flex:1"></div>
+        <button class="btn btn-primary btn-sm" onclick="generarRecibos()">🧾 Generar Recibos del Mes</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportarRecibosCSV()">📥 Exportar CSV</button>
+      </div>
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>CUIL</th>
+                <th>Empleado</th>
+                <th>Nivel</th>
+                <th>Bruto</th>
+                <th>Deducciones</th>
+                <th>Neto</th>
+                <th>Variación</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="recTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== LSD ====== -->
+    <div class="page" id="page-lsd" style="display:none">
+      <div class="page-header">
+        <div class="page-title">Libro de Sueldos Digital (LSD)</div>
+        <div class="page-subtitle">Generación de archivos TXT para AFIP - ARCA</div>
+      </div>
+      <div class="guide-box">
+        <h4>💡 ¿Qué es el Libro de Sueldos Digital?</h4>
+        <p>El LSD es una obligación de AFIP (ahora ARCA) que reemplaza los libros de sueldos en papel. El sistema genera el archivo TXT con el formato reglamentario (Resolución General 3781/2015 y sus modificatorias). Una vez generado, lo subís directamente al sitio de AFIP.</p>
+        <ol class="guide-steps">
+          <li>Seleccioná el período y la sociedad.</li>
+          <li>Verificá que los recibos del mes estén generados.</li>
+          <li>Hacé clic en "Generar TXT LSD" y descargá el archivo.</li>
+          <li>Subí el archivo en el portal de AFIP → Libro de Sueldos Digital.</li>
+        </ol>
+      </div>
+      <div class="toolbar">
+        <select class="filter-select" id="lsdMonth"></select>
+        <select class="filter-select" id="lsdYear"></select>
+        <div style="flex:1"></div>
+        <button class="btn btn-primary btn-sm" onclick="generarLSD()">📄 Generar TXT LSD</button>
+      </div>
+      <div id="lsdPreview" class="card" style="display:none">
+        <div class="card-header"><h3>Vista Previa del Archivo</h3></div>
+        <div class="card-body">
+          <pre id="lsdContent" class="mono" style="background:var(--surface-alt);padding:1rem;border-radius:var(--radius-sm);font-size:0.75rem;max-height:400px;overflow:auto;white-space:pre;border:1px solid var(--border)"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== ANOMALÍAS ====== -->
+    <div class="page" id="page-anomalias" style="display:none">
+      <div class="page-header">
+        <div class="page-title">Detección de Anomalías</div>
+        <div class="page-subtitle">Comparación período actual vs. anterior — Alertas por variaciones > 20%</div>
+      </div>
+      <div class="guide-box">
+        <h4>💡 ¿Para qué sirve esta sección?</h4>
+        <p>Antes de exportar al liquidador, este módulo compara automáticamente los sueldos del mes contra el período anterior. Si algún empleado tiene una variación mayor al 20% sin una novedad que la justifique, el sistema dispara una alerta roja para que la revises.</p>
+      </div>
+      <div class="toolbar">
+        <select class="filter-select" id="anomMonth" onchange="renderAnomalias()"></select>
+        <select class="filter-select" id="anomYear" onchange="renderAnomalias()"></select>
+        <div style="flex:1"></div>
+        <button class="btn btn-secondary btn-sm" onclick="renderAnomalias()">🔄 Analizar</button>
+      </div>
+      <div id="anomResults"></div>
+    </div>
+
+    <!-- ====== ABSENTISMO ====== -->
+    <div class="page" id="page-absentismo" style="display:none">
+      <div class="page-header">
+        <div class="page-title">Análisis de Absentismo</div>
+        <div class="page-subtitle">Heatmap de inasistencias por sección y nivel</div>
+      </div>
+      <div class="guide-box">
+        <h4>💡 ¿Cómo leer el heatmap?</h4>
+        <p>Los colores más intensos (rojo) indican mayor cantidad de inasistencias. Esto te permite detectar patrones: ¿hay más licencias en un nivel que en otro? ¿hay meses más problemáticos? Usá los filtros para explorar los datos.</p>
+      </div>
+      <div class="toolbar">
+        <select class="filter-select" id="absYear" onchange="renderAbsentismo()"></select>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Mapa de Calor — Inasistencias por Nivel y Mes</h3></div>
+        <div class="card-body" id="heatmapContainer"></div>
+      </div>
+    </div>
+
+    <!-- ====== IMPORTAR / EXPORTAR ====== -->
+    <div class="page" id="page-importexport" style="display:none">
+      <div class="page-header">
+        <div class="page-title">Importar / Exportar</div>
+        <div class="page-subtitle">Herramientas para mover datos dentro y fuera del sistema</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div class="card">
+          <div class="card-header"><h3>📥 Importar Datos</h3></div>
+          <div class="card-body">
+            <div class="guide-box" style="margin-bottom:1rem">
+              <h4>Formato esperado del archivo CSV</h4>
+              <p>El archivo debe tener las columnas: <code class="mono" style="background:var(--surface-alt);padding:0.1rem 0.4rem;border-radius:4px;font-size:0.8rem">CUIL, Nombre, Nivel, Horas, FechaAlta, SitRevista, Jurisdiccion</code></p>
+              <p style="margin-top:0.5rem">Valores válidos: Nivel = Media|Superior|Formacion · SitRevista = TIT|INT|SUP|CON · Jurisdiccion = PBA|CABA</p>
+            </div>
+            <div style="margin-bottom:1rem">
+              <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:0.5rem">¿Qué tipo de datos importás?</label>
+              <select class="form-input" id="importType">
+                <option value="empleados">Empleados (nómina completa)</option>
+                <option value="novedades">Novedades mensuales</option>
+              </select>
+            </div>
+            <div style="border:2px dashed var(--border);border-radius:var(--radius);padding:2rem;text-align:center;cursor:pointer;transition:var(--transition)" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.style.borderColor='var(--primary)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="handleFileDrop(event)">
+              <div style="font-size:2rem;margin-bottom:0.5rem">📁</div>
+              <p style="font-size:0.9rem;color:var(--text-secondary)">Arrastrá un archivo aquí o hacé clic para seleccionar</p>
+              <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem">Formatos: CSV, XLSX</p>
+              <input type="file" id="fileInput" accept=".csv,.xlsx" style="display:none" onchange="handleFileSelect(event)">
+            </div>
+            <div id="importPreview" style="margin-top:1rem;display:none"></div>
+            <button class="btn btn-primary" onclick="executeImport()" id="btnImport" style="margin-top:1rem;display:none;width:100%">✅ Confirmar Importación</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>📤 Exportar Datos</h3></div>
+          <div class="card-body">
+            <div class="guide-box" style="margin-bottom:1rem">
+              <h4>Opciones de exportación</h4>
+              <p>Exportá los datos del sistema en distintos formatos para uso externo, auditoría o respaldo.</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.75rem">
+              <button class="btn btn-secondary" onclick="exportEmpleadosCSV()" style="justify-content:flex-start">
+                👥 Nómina de Empleados (CSV)
+              </button>
+              <button class="btn btn-secondary" onclick="exportNovedadesCSV()" style="justify-content:flex-start">
+                📝 Novedades del Período (CSV)
+              </button>
+              <button class="btn btn-secondary" onclick="exportPlanillaDiscriminativa()" style="justify-content:flex-start">
+                📊 Planilla Discriminativa Mensual (CSV)
+              </button>
+              <button class="btn btn-secondary" onclick="exportarRecibosCSV()" style="justify-content:flex-start">
+                🧾 Recibos del Período (CSV)
+              </button>
+              <button class="btn btn-secondary" onclick="generarLSD()" style="justify-content:flex-start">
+                📄 Libro de Sueldos Digital - TXT (AFIP)
+              </button>
+              <button class="btn btn-secondary" onclick="exportFullBackup()" style="justify-content:flex-start">
+                💾 Backup Completo (JSON)
+              </button>
+              <hr class="section-divider">
+              <button class="btn btn-secondary" onclick="importBackup()" style="justify-content:flex-start">
+                📂 Restaurar Backup (JSON)
+              </button>
+              <input type="file" id="backupInput" accept=".json" style="display:none" onchange="handleBackupRestore(event)">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== AUDITORÍA ====== -->
+    <div class="page" id="page-auditoria" style="display:none">
+      <div class="page-header">
+        <div class="page-title">Registro de Auditoría</div>
+        <div class="page-subtitle">Historial completo de acciones realizadas en el sistema</div>
+      </div>
+      <div class="guide-box">
+        <h4>💡 ¿Qué se registra aquí?</h4>
+        <p>Cada acción relevante queda registrada: alta/baja de empleados, carga de novedades, generación de recibos, firmas digitales y exportaciones. Solo el rol Administrador puede ver esta sección.</p>
+      </div>
+      <div class="toolbar">
+        <input type="text" class="search-input" id="auditSearch" placeholder="Buscar en auditoría..." oninput="renderAuditoria()">
+      </div>
+      <div class="card">
+        <div class="card-body" id="auditTimeline"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ====== MODALS ====== -->
+<div class="modal-overlay" id="modalEmpleado">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="empModalTitle">Nuevo Empleado</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modalEmpleado')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>CUIL</label><input type="text" class="form-input mono" id="empCuil" placeholder="XX-XXXXXXXX-X"></div>
+        <div class="form-group"><label>Nombre Completo</label><input type="text" class="form-input" id="empNombre" placeholder="Apellido, Nombre"></div>
+      </div>
+      <div class="form-row three">
+        <div class="form-group"><label>Nivel</label>
+          <select class="form-input" id="empNivel"><option value="Media">Media</option><option value="Superior">Superior</option><option value="Formacion">Formación</option></select>
+        </div>
+        <div class="form-group"><label>Horas Cátedra</label><input type="number" class="form-input" id="empHoras" min="1" max="60" value="12"></div>
+        <div class="form-group"><label>Sit. Revista</label>
+          <select class="form-input" id="empRevista"><option value="TIT">Titular</option><option value="INT">Interino</option><option value="SUP">Suplente</option><option value="CON">Contratado</option></select>
+        </div>
+      </div>
+      <div class="form-row three">
+        <div class="form-group"><label>Jurisdicción</label>
+          <select class="form-input" id="empJuris"><option value="PBA">Prov. Buenos Aires (IPS)</option><option value="CABA">CABA</option></select>
+        </div>
+        <div class="form-group"><label>Fecha de Alta</label><input type="date" class="form-input" id="empFechaAlta"></div>
+        <div class="form-group"><label>Estado</label>
+          <select class="form-input" id="empEstado"><option value="activo">Activo</option><option value="baja">De Baja</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Jubilación %</label><input type="number" class="form-input" id="empJub" step="0.01" value="11"></div>
+        <div class="form-group"><label>Obra Social %</label><input type="number" class="form-input" id="empOS" step="0.01" value="3"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalEmpleado')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEmpleado()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalNovedad">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nueva Novedad</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modalNovedad')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Empleado</label>
+        <select class="form-input" id="novEmpleado"></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Tipo</label>
+          <select class="form-input" id="novTipo" onchange="updateNovConceptos()">
+            <option value="remunerativo">Remunerativo</option>
+            <option value="no_remunerativo">No Remunerativo</option>
+            <option value="deduccion">Deducción</option>
+            <option value="inasistencia">Inasistencia</option>
+            <option value="licencia">Licencia</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Concepto</label>
+          <select class="form-input" id="novConcepto"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Monto / Cantidad</label><input type="number" class="form-input" id="novMonto" step="0.01"></div>
+        <div class="form-group"><label>Detalle / Observación</label><input type="text" class="form-input" id="novDetalle" placeholder="Descripción libre"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalNovedad')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveNovedad()">Guardar Novedad</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalRecibo">
+  <div class="modal" style="max-width:800px">
+    <div class="modal-header">
+      <h3>Detalle del Recibo</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modalRecibo')">✕</button>
+    </div>
+    <div class="modal-body" id="reciboDetail"></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ============================================================
+// CONFIGURACIÓN Y CONSTANTES
+// ============================================================
+const USERS = {
+  admin: { pass:'admin', role:'admin', name:'Administrador' },
+  editor: { pass:'editor', role:'editor', name:'Editor de Novedades' },
+  auditor: { pass:'auditor', role:'readonly', name:'Auditor' }
+};
+
+const ROLES_PERMISOS = {
+  admin: { canEdit:true, canDelete:true, canSign:true, canExport:true, canAudit:true, canReset:true },
+  editor: { canEdit:true, canDelete:false, canSign:true, canExport:true, canAudit:false, canReset:false },
+  readonly: { canEdit:false, canDelete:false, canSign:false, canExport:true, canAudit:true, canReset:false }
+};
+
+const ESCALAS_SALARIALES = {
+  'Media':     { TIT:450000, INT:400000, SUP:350000, CON:300000 },
+  'Superior':  { TIT:550000, INT:500000, SUP:450000, CON:400000 },
+  'Formacion': { TIT:600000, INT:550000, SUP:500000, CON:450000 }
+};
+
+const TRAMOS_ANTIGUEDAD = [
+  { anios:0, pct:0 }, { anios:1, pct:10 }, { anios:2, pct:15 }, { anios:5, pct:30 },
+  { anios:7, pct:40 }, { anios:10, pct:50 }, { anios:12, pct:60 }, { anios:15, pct:70 },
+  { anios:17, pct:80 }, { anios:20, pct:100 }, { anios:22, pct:110 }, { anios:24, pct:120 }
+];
+
+const APORTES = {
+  PBA: { jubilacion:11, obraSocial:3, ley19032:3, cuotaSindical:2 },
+  CABA: { jubilacion:11, obraSocial:3, ley19032:3, cuotaSindical:2 }
+};
+const CONTRIB_PATRONALES = {
+  PBA: { jubilacion:16, obraSocial:6, ley19032:1.5, ART:5, segVida:0.5 },
+  CABA: { jubilacion:16, obraSocial:6, ley19032:1.5, ART:5, segVida:0.5 }
+};
+
+const CONCEPTOS_NOVEDAD = {
+  remunerativo: { HORAS_EXTRA:'Horas Extras', MAT_DIDACTICO:'Material Didáctico', RETROACTIVO:'Ajuste Retroactivo', PREMIO:'Premio' },
+  no_remunerativo: { FONID:'FONID', CONECTIVIDAD:'Conectividad', BONO:'Bono Extraordinario', AYUDA:'Ayuda Escolar' },
+  deduccion: { LIC_SIN_GOCE:'Licencia sin Goce', EMBARGO:'Embargo Judicial', PRESTAMO:'Préstamo', ADELANTO:'Adelanto de Sueldo' },
+  inasistencia: { INJUST:'Injustificada', JUST:'Justificada' },
+  licencia: { ENFERMEDAD:'Enfermedad', MATERNIDAD:'Maternidad', ESTUDIO:'Estudio', FAMILIAR:'Cuidado Familiar' }
+};
+
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+// ============================================================
+// ESTADO GLOBAL
+// ============================================================
+let state = {
+  user: null,
+  role: null,
+  society: 'CFPEA',
+  empleados: [],
+  novedades: [],
+  recibos: [],
+  firmas: {},
+  auditLog: [],
+  editingEmpId: null
+};
+
+// ============================================================
+// PERSISTENCIA (localStorage)
+// ============================================================
+function saveState() {
+  const toSave = { ...state };
+  delete toSave.user; delete toSave.role;
+  localStorage.setItem('iea_liq_' + state.society, JSON.stringify(toSave));
+}
+function loadState(society) {
+  const saved = localStorage.getItem('iea_liq_' + society);
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    state.empleados = parsed.empleados || [];
+    state.novedades = parsed.novedades || [];
+    state.recibos = parsed.recibos || [];
+    state.firmas = parsed.firmas || {};
+    state.auditLog = parsed.auditLog || [];
+  } else {
+    state.empleados = []; state.novedades = []; state.recibos = [];
+    state.firmas = {}; state.auditLog = [];
+  }
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const society = document.getElementById('loginSociety').value;
+  if (USERS[user] && USERS[user].pass === pass) {
+    state.user = user;
+    state.role = USERS[user].role;
+    state.society = society;
+    loadState(society);
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appContainer').style.display = 'block';
+    document.getElementById('sidebarSociety').textContent = society + ' SRL';
+    document.getElementById('userName').textContent = USERS[user].name;
+    document.getElementById('userRole').textContent = state.role === 'admin' ? 'Administrador' : state.role === 'editor' ? 'Editor' : 'Solo Lectura';
+    document.getElementById('userAvatar').textContent = user[0].toUpperCase();
+    applyPermissions();
+    initSelectors();
+    navigateTo('dashboard');
+    logAudit('LOGIN', 'Inicio de sesión - ' + society);
+    toast('Bienvenido/a, ' + USERS[user].name, 'success');
+  } else {
+    toast('Usuario o contraseña incorrectos', 'error');
+  }
+}
+function doLogout() {
+  logAudit('LOGOUT', 'Cierre de sesión');
+  saveState();
+  state.user = null; state.role = null;
+  document.getElementById('appContainer').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+function applyPermissions() {
+  const p = ROLES_PERMISOS[state.role];
+  const editBtns = ['btnAddEmp','btnAddNov','btnFirmar'];
+  editBtns.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = p.canEdit ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-item[data-page="auditoria"]').forEach(el => {
+    el.style.display = (p.canAudit || state.role === 'admin') ? '' : 'none';
+  });
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function navigateTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+  const target = document.getElementById('page-' + page);
+  if (target) target.style.display = 'block';
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item[data-page="'+page+'"]').forEach(n => n.classList.add('active'));
+  const renderers = {
+    dashboard: updateDashboard, empleados: renderEmpleados, novedades: renderNovedades,
+    antiguedad: renderAntiguedad, recibos: renderRecibos, anomalias: renderAnomalias,
+    absentismo: renderAbsentismo, auditoria: renderAuditoria
+  };
+  if (renderers[page]) renderers[page]();
+}
+
+// ============================================================
+// SELECTORS (Month/Year)
+// ============================================================
+function initSelectors() {
+  const now = new Date();
+  const monthSelectors = ['dashMonth','novMonth','recMonth','lsdMonth','anomMonth'];
+  const yearSelectors = ['dashYear','novYear','recYear','lsdYear','anomYear','absYear'];
+  monthSelectors.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = MESES.map((m,i) => `<option value="${i}" ${i===now.getMonth()?'selected':''}>${m}</option>`).join('');
+  });
+  yearSelectors.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '';
+    for (let y = now.getFullYear(); y >= 2020; y--) {
+      sel.innerHTML += `<option value="${y}" ${y===now.getFullYear()?'selected':''}>${y}</option>`;
+    }
+  });
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function getSelectedPeriod(prefix) {
+  return {
+    month: parseInt(document.getElementById(prefix+'Month')?.value || new Date().getMonth()),
+    year: parseInt(document.getElementById(prefix+'Year')?.value || new Date().getFullYear())
+  };
+}
+function periodKey(m, y) { return `${y}-${String(m+1).padStart(2,'0')}`; }
+function fmt$(n) { return '$' + Math.round(n).toLocaleString('es-AR'); }
+function fmtPct(n) { return n.toFixed(1) + '%'; }
+function uuid() { return Date.now().toString(36) + Math.random().toString(36).substr(2,5); }
+function toast(msg, type='info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function logAudit(action, detail) {
+  state.auditLog.unshift({ id:uuid(), date:new Date().toISOString(), user:state.user||'sistema', action, detail, society:state.society });
+  if (state.auditLog.length > 500) state.auditLog = state.auditLog.slice(0, 500);
+  saveState();
+}
+
+// ============================================================
+// ANTIGÜEDAD CALCULATIONS
+// ============================================================
+function calcAntiguedad(fechaAlta) {
+  if (!fechaAlta) return { anios:0, meses:0, dias:0, totalMeses:0 };
+  const alta = new Date(fechaAlta);
+  const hoy = new Date();
+  let anios = hoy.getFullYear() - alta.getFullYear();
+  let meses = hoy.getMonth() - alta.getMonth();
+  let dias = hoy.getDate() - alta.getDate();
+  if (dias < 0) { meses--; dias += new Date(hoy.getFullYear(), hoy.getMonth(), 0).getDate(); }
+  if (meses < 0) { anios--; meses += 12; }
+  return { anios, meses, dias, totalMeses: anios*12 + meses };
+}
+function getTramoActual(anios) {
+  let tramo = TRAMOS_ANTIGUEDAD[0];
+  for (const t of TRAMOS_ANTIGUEDAD) { if (anios >= t.anios) tramo = t; else break; }
+  return tramo;
+}
+function getProximoTramo(anios) {
+  for (const t of TRAMOS_ANTIGUEDAD) { if (t.anios > anios) return t; }
+  return null;
+}
+function diasParaProximoTramo(fechaAlta) {
+  if (!fechaAlta) return null;
+  const ant = calcAntiguedad(fechaAlta);
+  const prox = getProximoTramo(ant.anios);
+  if (!prox) return null;
+  const alta = new Date(fechaAlta);
+  const fechaProx = new Date(alta);
+  fechaProx.setFullYear(alta.getFullYear() + prox.anios);
+  const diff = Math.ceil((fechaProx - new Date()) / (1000*60*60*24));
+  return diff;
+}
+
+// ============================================================
+// EMPLEADOS
+// ============================================================
+function openEmpleadoModal(emp = null) {
+  state.editingEmpId = emp ? emp.id : null;
+  document.getElementById('empModalTitle').textContent = emp ? 'Editar Empleado' : 'Nuevo Empleado';
+  document.getElementById('empCuil').value = emp?.cuil || '';
+  document.getElementById('empNombre').value = emp?.nombre || '';
+  document.getElementById('empNivel').value = emp?.nivel || 'Media';
+  document.getElementById('empHoras').value = emp?.horas || 12;
+  document.getElementById('empRevista').value = emp?.revista || 'TIT';
+  document.getElementById('empJuris').value = emp?.jurisdiccion || 'PBA';
+  document.getElementById('empFechaAlta').value = emp?.fechaAlta || '';
+  document.getElementById('empEstado').value = emp?.estado || 'activo';
+  document.getElementById('empJub').value = emp?.jubilacion ?? 11;
+  document.getElementById('empOS').value = emp?.obraSocial ?? 3;
+  openModal('modalEmpleado');
+}
+function saveEmpleado() {
+  const cuil = document.getElementById('empCuil').value.trim();
+  const nombre = document.getElementById('empNombre').value.trim();
+  if (!cuil || !nombre) { toast('CUIL y Nombre son obligatorios','error'); return; }
+  const data = {
+    cuil, nombre,
+    nivel: document.getElementById('empNivel').value,
+    horas: parseInt(document.getElementById('empHoras').value) || 0,
+    revista: document.getElementById('empRevista').value,
+    jurisdiccion: document.getElementById('empJuris').value,
+    fechaAlta: document.getElementById('empFechaAlta').value,
+    estado: document.getElementById('empEstado').value,
+    jubilacion: parseFloat(document.getElementById('empJub').value) || 11,
+    obraSocial: parseFloat(document.getElementById('empOS').value) || 3
+  };
+  if (state.editingEmpId) {
+    const idx = state.empleados.findIndex(e => e.id === state.editingEmpId);
+    if (idx >= 0) { state.empleados[idx] = { ...state.empleados[idx], ...data }; }
+    logAudit('EDIT_EMP', `Editado: ${nombre} (${cuil})`);
+    toast('Empleado actualizado', 'success');
+  } else {
+    data.id = uuid();
+    state.empleados.push(data);
+    logAudit('ADD_EMP', `Alta: ${nombre} (${cuil})`);
+    toast('Empleado agregado', 'success');
+  }
+  saveState(); closeModal('modalEmpleado'); renderEmpleados();
+}
+function deleteEmpleado(id) {
+  if (!ROLES_PERMISOS[state.role].canDelete) { toast('No tenés permisos para eliminar','error'); return; }
+  const emp = state.empleados.find(e => e.id === id);
+  if (confirm('¿Seguro que querés eliminar a ' + emp?.nombre + '?')) {
+    state.empleados = state.empleados.filter(e => e.id !== id);
+    logAudit('DEL_EMP', `Baja: ${emp.nombre} (${emp.cuil})`);
+    saveState(); renderEmpleados(); toast('Empleado eliminado','warning');
+  }
+}
+function renderEmpleados() {
+  const search = (document.getElementById('empSearch')?.value || '').toLowerCase();
+  const nivel = document.getElementById('empFilterNivel')?.value || '';
+  const estado = document.getElementById('empFilterEstado')?.value || '';
+  let filtered = state.empleados.filter(e => {
+    if (search && !e.nombre.toLowerCase().includes(search) && !e.cuil.includes(search)) return false;
+    if (nivel && e.nivel !== nivel) return false;
+    if (estado && e.estado !== estado) return false;
+    return true;
+  });
+  const tbody = document.getElementById('empTableBody');
+  if (!tbody) return;
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-state"><div class="empty-icon">👥</div><h4>No hay empleados cargados</h4><p>Agregá empleados manualmente o importalos desde un archivo CSV.</p></td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(e => {
+    const ant = calcAntiguedad(e.fechaAlta);
+    const revistas = { TIT:'Titular', INT:'Interino', SUP:'Suplente', CON:'Contratado' };
+    return `<tr class="${e.estado==='baja'?'alert-row':''}">
+      <td class="mono">${e.cuil}</td>
+      <td><strong>${e.nombre}</strong></td>
+      <td><span class="badge badge-info">${e.nivel}</span></td>
+      <td>${e.horas}hs</td>
+      <td>${ant.anios}a ${ant.meses}m</td>
+      <td>${revistas[e.revista]||e.revista}</td>
+      <td>${e.jurisdiccion}</td>
+      <td><span class="badge ${e.estado==='activo'?'badge-success':'badge-danger'}">${e.estado}</span></td>
+      <td>
+        ${ROLES_PERMISOS[state.role].canEdit ? `<button class="btn btn-ghost btn-xs" onclick='openEmpleadoModal(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✏️</button>` : ''}
+        ${ROLES_PERMISOS[state.role].canDelete ? `<button class="btn btn-ghost btn-xs" onclick="deleteEmpleado('${e.id}')">🗑️</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================
+// NOVEDADES
+// ============================================================
+function updateNovConceptos() {
+  const tipo = document.getElementById('novTipo').value;
+  const sel = document.getElementById('novConcepto');
+  const conceptos = CONCEPTOS_NOVEDAD[tipo] || {};
+  sel.innerHTML = Object.entries(conceptos).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+}
+function openNovedadModal() {
+  const sel = document.getElementById('novEmpleado');
+  sel.innerHTML = state.empleados.filter(e=>e.estado==='activo').map(e => `<option value="${e.id}">${e.nombre} (${e.cuil})</option>`).join('');
+  updateNovConceptos();
+  document.getElementById('novMonto').value = '';
+  document.getElementById('novDetalle').value = '';
+  openModal('modalNovedad');
+}
+function saveNovedad() {
+  const empId = document.getElementById('novEmpleado').value;
+  const emp = state.empleados.find(e=>e.id===empId);
+  if (!emp) { toast('Seleccioná un empleado','error'); return; }
+  const p = getSelectedPeriod('nov');
+  const nov = {
+    id: uuid(), empId, empNombre: emp.nombre, empCuil: emp.cuil,
+    tipo: document.getElementById('novTipo').value,
+    concepto: document.getElementById('novConcepto').value,
+    conceptoLabel: document.getElementById('novConcepto').selectedOptions[0]?.text || '',
+    monto: parseFloat(document.getElementById('novMonto').value) || 0,
+    detalle: document.getElementById('novDetalle').value,
+    periodo: periodKey(p.month, p.year),
+    cargadoPor: state.user,
+    fecha: new Date().toISOString()
+  };
+  state.novedades.push(nov);
+  logAudit('ADD_NOV', `Novedad: ${nov.conceptoLabel} para ${emp.nombre} - ${nov.periodo}`);
+  saveState(); closeModal('modalNovedad'); renderNovedades();
+  toast('Novedad registrada', 'success');
+}
+function deleteNovedad(id) {
+  state.novedades = state.novedades.filter(n => n.id !== id);
+  saveState(); renderNovedades(); toast('Novedad eliminada','warning');
+}
+function renderNovedades() {
+  const p = getSelectedPeriod('nov');
+  const pk = periodKey(p.month, p.year);
+  const filtered = state.novedades.filter(n => n.periodo === pk);
+  const tbody = document.getElementById('novTableBody');
+  if (!tbody) return;
+  // Firma status
+  const firmaKey = pk;
+  const firma = state.firmas[firmaKey];
+  const panel = document.getElementById('firmaStatusPanel');
+  if (firma) {
+    panel.innerHTML = `<div class="signature-panel signed" style="margin-bottom:1.5rem">
+      <div style="font-size:1.5rem;margin-bottom:0.5rem">✅</div>
+      <strong>Lote firmado digitalmente</strong>
+      <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.25rem">Firmado por: ${firma.user} — ${new Date(firma.date).toLocaleString('es-AR')} — ${firma.count} novedades</p>
+      <p class="mono" style="font-size:0.7rem;color:var(--text-muted);margin-top:0.5rem">Hash: ${firma.hash}</p>
+    </div>`;
+  } else if (filtered.length > 0) {
+    panel.innerHTML = `<div class="signature-panel" style="margin-bottom:1.5rem">
+      <div style="font-size:1.5rem;margin-bottom:0.5rem">✍️</div>
+      <strong>Lote pendiente de firma</strong>
+      <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.25rem">${filtered.length} novedades cargadas. Firmá el lote para enviarlo a liquidación.</p>
+    </div>`;
+  } else { panel.innerHTML = ''; }
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><div class="empty-icon">📝</div><h4>No hay novedades para este período</h4><p>Cargá novedades haciendo clic en "Nueva Novedad".</p></td></tr>';
+    return;
+  }
+  const tipoLabels = { remunerativo:'Remunerativo', no_remunerativo:'No Remun.', deduccion:'Deducción', inasistencia:'Inasistencia', licencia:'Licencia' };
+  const tipoBadges = { remunerativo:'badge-success', no_remunerativo:'badge-info', deduccion:'badge-danger', inasistencia:'badge-warning', licencia:'badge-warning' };
+  tbody.innerHTML = filtered.map(n => `<tr>
+    <td><strong>${n.empNombre}</strong><br><span class="mono" style="font-size:0.75rem;color:var(--text-muted)">${n.empCuil}</span></td>
+    <td><span class="badge ${tipoBadges[n.tipo]||'badge-neutral'}">${tipoLabels[n.tipo]||n.tipo}</span></td>
+    <td>${n.conceptoLabel}</td>
+    <td>${n.detalle||'-'}</td>
+    <td class="mono">${n.tipo==='inasistencia'||n.tipo==='licencia'?n.monto+' días':fmt$(n.monto)}</td>
+    <td>${n.cargadoPor}</td>
+    <td style="font-size:0.8rem">${new Date(n.fecha).toLocaleDateString('es-AR')}</td>
+    <td>${ROLES_PERMISOS[state.role].canEdit && !firma ? `<button class="btn btn-ghost btn-xs" onclick="deleteNovedad('${n.id}')">🗑️</button>` : ''}</td>
+  </tr>`).join('');
+}
+function firmarLoteNovedades() {
+  const p = getSelectedPeriod('nov');
+  const pk = periodKey(p.month, p.year);
+  const filtered = state.novedades.filter(n => n.periodo === pk);
+  if (filtered.length === 0) { toast('No hay novedades para firmar','warning'); return; }
+  if (state.firmas[pk]) { toast('Este lote ya fue firmado','info'); return; }
+  const hashData = JSON.stringify(filtered.map(n=>({id:n.id,emp:n.empCuil,tipo:n.tipo,monto:n.monto})));
+  let hash = 0; for(let i=0;i<hashData.length;i++){hash=((hash<<5)-hash)+hashData.charCodeAt(i);hash|=0;}
+  state.firmas[pk] = { user:state.user, date:new Date().toISOString(), count:filtered.length, hash:Math.abs(hash).toString(16).toUpperCase() };
+  logAudit('SIGN', `Firma digital del lote ${pk} - ${filtered.length} novedades`);
+  saveState(); renderNovedades();
+  toast('Lote firmado exitosamente', 'success');
+}
+
+// ============================================================
+// ANTIGÜEDAD
+// ============================================================
+function renderAntiguedad() {
+  const tbody = document.getElementById('antTableBody');
+  const alertsDiv = document.getElementById('antAlerts');
+  if (!tbody) return;
+  const activos = state.empleados.filter(e => e.estado === 'activo' && e.fechaAlta);
+  let alertsHtml = '';
+  let rows = activos.map(e => {
+    const ant = calcAntiguedad(e.fechaAlta);
+    const tramo = getTramoActual(ant.anios);
+    const prox = getProximoTramo(ant.anios);
+    const diasFaltan = diasParaProximoTramo(e.fechaAlta);
+    let estadoBadge = '<span class="badge badge-success">OK</span>';
+    if (diasFaltan !== null && diasFaltan <= 30 && diasFaltan > 0) {
+      estadoBadge = '<span class="badge badge-warning">⚠️ Próximo cambio</span>';
+      alertsHtml += `<div class="alert alert-warning"><span class="alert-icon">⚠️</span><div><strong>${e.nombre}</strong> cambia de escalafón en <strong>${diasFaltan} días</strong> (de ${tramo.pct}% a ${prox.pct}%). Impacto estimado en la liquidación.</div></div>`;
+    } else if (diasFaltan !== null && diasFaltan <= 0 && diasFaltan > -30) {
+      estadoBadge = '<span class="badge badge-info">🆕 Cambió recientemente</span>';
+    }
+    return `<tr>
+      <td><strong>${e.nombre}</strong></td>
+      <td class="mono">${e.fechaAlta}</td>
+      <td>${ant.anios}</td><td>${ant.meses}</td><td>${ant.dias}</td>
+      <td><strong>${tramo.pct}%</strong></td>
+      <td>${prox ? prox.pct+'% (a los '+prox.anios+' años)' : 'Máximo alcanzado'}</td>
+      <td>${diasFaltan !== null && diasFaltan > 0 ? diasFaltan+' días' : '-'}</td>
+      <td>${estadoBadge}</td>
+    </tr>`;
+  });
+  alertsDiv.innerHTML = alertsHtml;
+  tbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="9" class="empty-state"><div class="empty-icon">📅</div><h4>No hay empleados con fecha de alta cargada</h4></td></tr>';
+}
+
+// ============================================================
+// RECIBOS
+// ============================================================
+function calcSueldo(emp, periodo) {
+  const escala = ESCALAS_SALARIALES[emp.nivel]?.[emp.revista] || 0;
+  const basePorHora = escala / 120;
+  const brutoBase = basePorHora * emp.horas;
+  const ant = calcAntiguedad(emp.fechaAlta);
+  const tramo = getTramoActual(ant.anios);
+  const addAntiguedad = brutoBase * (tramo.pct / 100);
+  // Novedades del período
+  const novs = state.novedades.filter(n => n.empId === emp.id && n.periodo === periodo);
+  let addRemun = 0, addNoRemun = 0, descuentos = 0, diasInasist = 0;
+  novs.forEach(n => {
+    if (n.tipo === 'remunerativo') addRemun += n.monto;
+    if (n.tipo === 'no_remunerativo') addNoRemun += n.monto;
+    if (n.tipo === 'deduccion') descuentos += n.monto;
+    if (n.tipo === 'inasistencia') diasInasist += n.monto;
+    if (n.tipo === 'licencia' && n.concepto === 'LIC_SIN_GOCE') diasInasist += n.monto;
+  });
+  const descInasist = (brutoBase / 22) * diasInasist;
+  const brutoTotal = brutoBase + addAntiguedad + addRemun - descInasist;
+  const aportes = {
+    jubilacion: brutoTotal * (emp.jubilacion || 11) / 100,
+    obraSocial: brutoTotal * (emp.obraSocial || 3) / 100,
+    ley19032: brutoTotal * 3 / 100
+  };
+  const totalAportes = Object.values(aportes).reduce((a,b)=>a+b,0);
+  const neto = brutoTotal - totalAportes - descuentos + addNoRemun;
+  return { brutoBase, addAntiguedad, antiguedadPct:tramo.pct, addRemun, addNoRemun, descInasist, diasInasist, brutoTotal, aportes, totalAportes, descuentos, neto, novs };
+}
+function generarRecibos() {
+  const p = getSelectedPeriod('rec');
+  const pk = periodKey(p.month, p.year);
+  const activos = state.empleados.filter(e => e.estado === 'activo');
+  if (activos.length === 0) { toast('No hay empleados activos','warning'); return; }
+  // Eliminar recibos previos del mismo período
+  state.recibos = state.recibos.filter(r => r.periodo !== pk);
+  activos.forEach(emp => {
+    const calc = calcSueldo(emp, pk);
+    state.recibos.push({
+      id: uuid(), empId: emp.id, empNombre: emp.nombre, empCuil: emp.cuil,
+      nivel: emp.nivel, periodo: pk, ...calc, generadoEn: new Date().toISOString()
+    });
+  });
+  logAudit('GEN_RECIBOS', `Generados ${activos.length} recibos para ${pk}`);
+  saveState(); renderRecibos();
+  toast(`${activos.length} recibos generados para ${MESES[p.month]} ${p.year}`, 'success');
+}
+function renderRecibos() {
+  const p = getSelectedPeriod('rec');
+  const pk = periodKey(p.month, p.year);
+  const pkPrev = p.month === 0 ? periodKey(11, p.year-1) : periodKey(p.month-1, p.year);
+  const filtered = state.recibos.filter(r => r.periodo === pk);
+  const prevRecibos = state.recibos.filter(r => r.periodo === pkPrev);
+  const tbody = document.getElementById('recTableBody');
+  if (!tbody) return;
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><div class="empty-icon">🧾</div><h4>No hay recibos para este período</h4><p>Generá los recibos haciendo clic en "Generar Recibos del Mes".</p></td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(r => {
+    const prev = prevRecibos.find(pr => pr.empId === r.empId);
+    let variacion = '-';
+    let varClass = '';
+    if (prev) {
+      const diff = ((r.neto - prev.neto) / prev.neto * 100);
+      variacion = (diff >= 0 ? '+' : '') + diff.toFixed(1) + '%';
+      varClass = Math.abs(diff) > 20 ? 'style="color:var(--danger);font-weight:700"' : diff > 0 ? 'style="color:var(--success)"' : '';
+    }
+    return `<tr ${Math.abs(prev ? ((r.neto-prev.neto)/prev.neto*100) : 0) > 20 ? 'class="alert-row"':''}>
+      <td class="mono">${r.empCuil}</td>
+      <td><strong>${r.empNombre}</strong></td>
+      <td><span class="badge badge-info">${r.nivel}</span></td>
+      <td class="mono">${fmt$(r.brutoTotal)}</td>
+      <td class="mono">${fmt$(r.totalAportes + r.descuentos)}</td>
+      <td class="mono" style="font-weight:700">${fmt$(r.neto)}</td>
+      <td ${varClass}>${variacion}</td>
+      <td><button class="btn btn-ghost btn-xs" onclick="verRecibo('${r.id}')">👁️ Ver</button></td>
+    </tr>`;
+  }).join('');
+}
+function verRecibo(id) {
+  const r = state.recibos.find(rec => rec.id === id);
+  if (!r) return;
+  const emp = state.empleados.find(e => e.id === r.empId);
+  const det = document.getElementById('reciboDetail');
+  det.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid var(--primary)">
+      <div>
+        <h2 style="font-size:1.2rem;color:var(--primary)">${state.society} SRL</h2>
+        <p style="font-size:0.85rem;color:var(--text-muted)">Recibo de Haberes — ${r.periodo}</p>
+      </div>
+      <div style="text-align:right">
+        <div class="mono" style="font-weight:600">${r.empCuil}</div>
+        <div style="font-weight:700">${r.empNombre}</div>
+        <div style="font-size:0.85rem;color:var(--text-muted)">${r.nivel} — ${emp?.revista||''}</div>
+      </div>
+    </div>
+    <table style="margin-bottom:1.5rem">
+      <thead><tr><th>Concepto</th><th style="text-align:right">Haberes</th><th style="text-align:right">Deducciones</th></tr></thead>
+      <tbody>
+        <tr><td>Sueldo Básico (${emp?.horas||0}hs)</td><td style="text-align:right" class="mono">${fmt$(r.brutoBase)}</td><td></td></tr>
+        <tr><td>Antigüedad (${r.antiguedadPct}%)</td><td style="text-align:right" class="mono">${fmt$(r.addAntiguedad)}</td><td></td></tr>
+        ${r.addRemun > 0 ? `<tr><td>Conceptos Remunerativos</td><td style="text-align:right" class="mono">${fmt$(r.addRemun)}</td><td></td></tr>` : ''}
+        ${r.descInasist > 0 ? `<tr><td>Descuento Inasistencias (${r.diasInasist} días)</td><td></td><td style="text-align:right" class="mono" style="color:var(--danger)">-${fmt$(r.descInasist)}</td></tr>` : ''}
+        <tr style="font-weight:700;border-top:2px solid var(--border)"><td>Bruto Total</td><td style="text-align:right" class="mono">${fmt$(r.brutoTotal)}</td><td></td></tr>
+        <tr><td>Jubilación (${emp?.jubilacion||11}%)</td><td></td><td style="text-align:right" class="mono">-${fmt$(r.aportes.jubilacion)}</td></tr>
+        <tr><td>Obra Social (${emp?.obraSocial||3}%)</td><td></td><td style="text-align:right" class="mono">-${fmt$(r.aportes.obraSocial)}</td></tr>
+        <tr><td>Ley 19.032 (3%)</td><td></td><td style="text-align:right" class="mono">-${fmt$(r.aportes.ley19032)}</td></tr>
+        ${r.descuentos > 0 ? `<tr><td>Otras Deducciones</td><td></td><td style="text-align:right" class="mono">-${fmt$(r.descuentos)}</td></tr>` : ''}
+        ${r.addNoRemun > 0 ? `<tr><td>Conceptos No Remunerativos</td><td style="text-align:right" class="mono">${fmt$(r.addNoRemun)}</td><td></td></tr>` : ''}
+      </tbody>
+      <tfoot><tr style="font-size:1.1rem;font-weight:700;border-top:3px solid var(--primary)"><td>NETO A COBRAR</td><td colspan="2" style="text-align:right" class="mono">${fmt$(r.neto)}</td></tr></tfoot>
+    </table>`;
+  openModal('modalRecibo');
+}
+
+// ============================================================
+// LSD - LIBRO DE SUELDOS DIGITAL
+// ============================================================
+function generarLSD() {
+  const p = getSelectedPeriod('lsd');
+  const pk = periodKey(p.month, p.year);
+  const recibos = state.recibos.filter(r => r.periodo === pk);
+  if (recibos.length === 0) { toast('Primero generá los recibos del período','warning'); return; }
+  // Formato simplificado LSD AFIP (líneas de texto fijo)
+  let lines = [];
+  const cuit_empresa = state.society === 'CFPEA' ? '30-12345678-9' : '30-98765432-1';
+  // Cabecera
+  lines.push(`01|${cuit_empresa.replace(/-/g,'')}|${p.year}${String(p.month+1).padStart(2,'0')}|${state.society} SRL|1|0`);
+  // Empleados (Registro tipo 04)
+  recibos.forEach((r, idx) => {
+    const emp = state.empleados.find(e => e.id === r.empId);
+    if (!emp) return;
+    const cuil = emp.cuil.replace(/-/g,'');
+    const ant = calcAntiguedad(emp.fechaAlta);
+    lines.push(`04|${cuil}|${emp.nombre.padEnd(40).substring(0,40)}|${emp.fechaAlta?.replace(/-/g,'')||''}|${r.brutoTotal.toFixed(2)}|${r.totalAportes.toFixed(2)}|${r.neto.toFixed(2)}|${emp.horas}|${ant.anios}|${emp.revista}|${emp.nivel}`);
+  });
+  // Totales (Registro tipo 05)
+  const totalBruto = recibos.reduce((s,r) => s+r.brutoTotal, 0);
+  const totalAportes = recibos.reduce((s,r) => s+r.totalAportes, 0);
+  const totalNeto = recibos.reduce((s,r) => s+r.neto, 0);
+  lines.push(`05|${recibos.length}|${totalBruto.toFixed(2)}|${totalAportes.toFixed(2)}|${totalNeto.toFixed(2)}`);
+
+  const content = lines.join('\n');
+  document.getElementById('lsdContent').textContent = content;
+  document.getElementById('lsdPreview').style.display = 'block';
+  // Download
+  const blob = new Blob([content], { type:'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `LSD_${state.society}_${pk}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  logAudit('GEN_LSD', `Archivo LSD generado para ${pk}`);
+  toast('Archivo LSD descargado', 'success');
+}
+
+// ============================================================
+// ANOMALÍAS (OUTLIER DETECTION)
+// ============================================================
+function renderAnomalias() {
+  const p = getSelectedPeriod('anom');
+  const pk = periodKey(p.month, p.year);
+  const pkPrev = p.month === 0 ? periodKey(11, p.year-1) : periodKey(p.month-1, p.year);
+  const current = state.recibos.filter(r => r.periodo === pk);
+  const prev = state.recibos.filter(r => r.periodo === pkPrev);
+  const container = document.getElementById('anomResults');
+  if (!container) return;
+  if (current.length === 0) {
+    container.innerHTML = '<div class="card"><div class="card-body empty-state"><div class="empty-icon">⚠️</div><h4>No hay recibos para analizar</h4><p>Generá primero los recibos del período actual.</p></div></div>';
+    return;
+  }
+  let anomalies = [];
+  current.forEach(r => {
+    const p2 = prev.find(pr => pr.empId === r.empId);
+    if (!p2) return;
+    const diff = ((r.neto - p2.neto) / p2.neto * 100);
+    const novsJustif = state.novedades.filter(n => n.empId === r.empId && n.periodo === pk);
+    if (Math.abs(diff) > 20) {
+      anomalies.push({ emp: r.empNombre, cuil: r.empCuil, netoActual: r.neto, netoPrev: p2.neto, diff, justificado: novsJustif.length > 0, novedades: novsJustif });
+    }
+  });
+  if (anomalies.length === 0) {
+    container.innerHTML = `<div class="alert alert-success"><span class="alert-icon">✅</span><div><strong>Sin anomalías detectadas.</strong> Todos los sueldos están dentro del rango de variación normal (±20%) respecto al período anterior.</div></div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div class="alert alert-danger"><span class="alert-icon">🚨</span><div><strong>${anomalies.length} anomalía(s) detectada(s).</strong> Los siguientes empleados tienen variaciones mayores al 20%. Revisá antes de exportar.</div></div>
+    <div class="card"><div class="table-wrapper"><table>
+      <thead><tr><th>Empleado</th><th>CUIL</th><th>Neto Anterior</th><th>Neto Actual</th><th>Variación</th><th>¿Tiene novedad?</th><th>Estado</th></tr></thead>
+      <tbody>${anomalies.map(a => `<tr class="alert-row">
+        <td><strong>${a.emp}</strong></td>
+        <td class="mono">${a.cuil}</td>
+        <td class="mono">${fmt$(a.netoPrev)}</td>
+        <td class="mono">${fmt$(a.netoActual)}</td>
+        <td class="mono" style="color:var(--danger);font-weight:700">${a.diff>0?'+':''}${a.diff.toFixed(1)}%</td>
+        <td>${a.justificado ? '<span class="badge badge-warning">Sí ('+a.novedades.length+')</span>' : '<span class="badge badge-danger">NO</span>'}</td>
+        <td>${a.justificado ? '<span class="badge badge-warning">Revisar</span>' : '<span class="badge badge-danger">⚠️ ALERTA</span>'}</td>
+      </tr>`).join('')}</tbody>
+    </table></div></div>`;
+}
+
+// ============================================================
+// ABSENTISMO HEATMAP
+// ============================================================
+function renderAbsentismo() {
+  const year = parseInt(document.getElementById('absYear')?.value || new Date().getFullYear());
+  const container = document.getElementById('heatmapContainer');
+  if (!container) return;
+  const niveles = ['Media', 'Superior', 'Formacion'];
+  let data = {};
+  niveles.forEach(n => { data[n] = new Array(12).fill(0); });
+  state.novedades.filter(n => (n.tipo==='inasistencia'||n.tipo==='licencia') && n.periodo.startsWith(year+'')).forEach(n => {
+    const emp = state.empleados.find(e => e.id === n.empId);
+    if (!emp) return;
+    const month = parseInt(n.periodo.split('-')[1]) - 1;
+    data[emp.nivel] = data[emp.nivel] || new Array(12).fill(0);
+    data[emp.nivel][month] += n.monto;
+  });
+  const maxVal = Math.max(1, ...niveles.flatMap(n => data[n]));
+  const getHeatClass = (v) => { const pct = v/maxVal; if(pct===0)return 'heat-0'; if(pct<0.2)return 'heat-1'; if(pct<0.4)return 'heat-2'; if(pct<0.6)return 'heat-3'; if(pct<0.8)return 'heat-4'; return 'heat-5'; };
+
+  let html = '<table style="font-size:0.85rem"><thead><tr><th></th>';
+  MESES.forEach(m => html += `<th style="text-align:center;font-size:0.7rem">${m.substring(0,3)}</th>`);
+  html += '</tr></thead><tbody>';
+  niveles.forEach(nivel => {
+    html += `<tr><td style="font-weight:600;padding-right:1rem">${nivel}</td>`;
+    data[nivel].forEach((v,i) => {
+      html += `<td style="text-align:center"><div class="heatmap-cell ${getHeatClass(v)}" style="width:40px;height:40px;margin:auto;display:flex;align-items:center;justify-content:center;border-radius:6px">${v}</div></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  html += `<div style="display:flex;gap:0.5rem;align-items:center;margin-top:1rem;font-size:0.75rem;color:var(--text-muted)">
+    <span>Menos</span>
+    <div class="heatmap-cell heat-0" style="width:20px;height:20px"></div>
+    <div class="heatmap-cell heat-1" style="width:20px;height:20px"></div>
+    <div class="heatmap-cell heat-2" style="width:20px;height:20px"></div>
+    <div class="heatmap-cell heat-3" style="width:20px;height:20px"></div>
+    <div class="heatmap-cell heat-4" style="width:20px;height:20px"></div>
+    <div class="heatmap-cell heat-5" style="width:20px;height:20px"></div>
+    <span>Más inasistencias</span>
+  </div>`;
+  container.innerHTML = html;
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function updateDashboard() {
+  const p = getSelectedPeriod('dash');
+  const pk = periodKey(p.month, p.year);
+  document.getElementById('dashPeriod').textContent = MESES[p.month] + ' ' + p.year;
+  const activos = state.empleados.filter(e => e.estado === 'activo');
+  const novsDelMes = state.novedades.filter(n => n.periodo === pk);
+  const recibosDelMes = state.recibos.filter(r => r.periodo === pk);
+  const masaSalarial = recibosDelMes.reduce((s,r) => s + r.brutoTotal, 0);
+  // Alertas
+  let alertCount = 0;
+  let alertsHtml = '';
+  activos.forEach(e => {
+    const dias = diasParaProximoTramo(e.fechaAlta);
+    if (dias !== null && dias > 0 && dias <= 30) {
+      alertCount++;
+      alertsHtml += `<div class="alert alert-warning"><span class="alert-icon">📅</span><div><strong>${e.nombre}</strong> cambia de escalafón en ${dias} días.</div></div>`;
+    }
+  });
+  // Anomalías check
+  const pkPrev = p.month === 0 ? periodKey(11, p.year-1) : periodKey(p.month-1, p.year);
+  const prevRecibos = state.recibos.filter(r => r.periodo === pkPrev);
+  recibosDelMes.forEach(r => {
+    const prev = prevRecibos.find(pr => pr.empId === r.empId);
+    if (prev && Math.abs((r.neto - prev.neto)/prev.neto*100) > 20) {
+      const novsJ = state.novedades.filter(n => n.empId === r.empId && n.periodo === pk);
+      if (novsJ.length === 0) {
+        alertCount++;
+        alertsHtml += `<div class="alert alert-danger"><span class="alert-icon">⚠️</span><div><strong>${r.empNombre}</strong> tiene variación > 20% sin novedad justificante.</div></div>`;
+      }
+    }
+  });
+  document.getElementById('dashAlerts').innerHTML = alertsHtml;
+  document.getElementById('statEmpleados').textContent = activos.length;
+  document.getElementById('statMasaSalarial').textContent = fmt$(masaSalarial);
+  document.getElementById('statNovedades').textContent = novsDelMes.length;
+  document.getElementById('statAlertas').textContent = alertCount;
+  const badge = document.getElementById('alertBadge');
+  if (alertCount > 0) { badge.style.display = ''; badge.textContent = alertCount; }
+  else { badge.style.display = 'none'; }
+  // Distribución
+  const dist = { Media:0, Superior:0, Formacion:0 };
+  activos.forEach(e => dist[e.nivel] = (dist[e.nivel]||0) + 1);
+  const total = activos.length || 1;
+  document.getElementById('dashDistribucion').innerHTML = Object.entries(dist).map(([nivel, count]) => `
+    <div style="margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.35rem">
+        <span>${nivel}</span><span class="mono">${count} (${(count/total*100).toFixed(0)}%)</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill green" style="width:${count/total*100}%"></div></div>
+    </div>
+  `).join('');
+  // Próximos cambios escalafón
+  const proxCambios = activos.filter(e => { const d = diasParaProximoTramo(e.fechaAlta); return d !== null && d > 0 && d <= 90; })
+    .sort((a,b) => diasParaProximoTramo(a.fechaAlta) - diasParaProximoTramo(b.fechaAlta)).slice(0,5);
+  document.getElementById('dashEscalafon').innerHTML = proxCambios.length === 0
+    ? '<p style="color:var(--text-muted);font-size:0.85rem">No hay cambios de escalafón próximos (90 días).</p>'
+    : proxCambios.map(e => {
+      const dias = diasParaProximoTramo(e.fechaAlta);
+      const ant = calcAntiguedad(e.fechaAlta);
+      const prox = getProximoTramo(ant.anios);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border-light)">
+        <div><strong style="font-size:0.88rem">${e.nombre}</strong><br><span style="font-size:0.75rem;color:var(--text-muted)">${getTramoActual(ant.anios).pct}% → ${prox.pct}%</span></div>
+        <span class="badge ${dias<=30?'badge-warning':'badge-info'}">${dias} días</span>
+      </div>`;
+    }).join('');
+}
+
+// ============================================================
+// AUDITORÍA
+// ============================================================
+function renderAuditoria() {
+  const search = (document.getElementById('auditSearch')?.value||'').toLowerCase();
+  const filtered = state.auditLog.filter(l => !search || l.detail.toLowerCase().includes(search) || l.action.toLowerCase().includes(search));
+  const container = document.getElementById('auditTimeline');
+  if (!container) return;
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔒</div><h4>Sin registros de auditoría</h4></div>';
+    return;
+  }
+  const iconMap = { LOGIN:'🔑', LOGOUT:'🚪', ADD_EMP:'👤', EDIT_EMP:'✏️', DEL_EMP:'🗑️', ADD_NOV:'📝', SIGN:'✍️', GEN_RECIBOS:'🧾', GEN_LSD:'📄', EXPORT:'📤', IMPORT:'📥' };
+  const colorMap = { LOGIN:'background:var(--info)', LOGOUT:'background:var(--text-muted)', ADD_EMP:'background:var(--success)', DEL_EMP:'background:var(--danger)', SIGN:'background:var(--accent)' };
+  container.innerHTML = filtered.slice(0,50).map(l => `
+    <div class="timeline-item">
+      <div class="timeline-dot" style="${colorMap[l.action]||'background:var(--primary)'};color:white">${iconMap[l.action]||'📌'}</div>
+      <div class="timeline-content">
+        <div style="font-weight:600;font-size:0.88rem">${l.detail}</div>
+        <div class="time">${new Date(l.date).toLocaleString('es-AR')} · ${l.user} · ${l.society}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// IMPORT / EXPORT
+// ============================================================
+let pendingImportData = null;
+
+function handleFileDrop(e) {
+  e.preventDefault();
+  e.target.style.borderColor = 'var(--border)';
+  const file = e.dataTransfer.files[0];
+  if (file) processImportFile(file);
+}
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processImportFile(file);
+}
+function processImportFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'xlsx' || ext === 'xls') {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(ws, {defval:''});
+        if (!data.length) { toast('Archivo vacío','error'); return; }
+        const headers = Object.keys(data[0]);
+        pendingImportData = { headers, rows: data, type: document.getElementById('importType').value };
+        showImportPreview(headers, data);
+      } catch(err) { toast('Error leyendo XLSX: ' + err.message, 'error'); }
+    };
+    reader.readAsArrayBuffer(file);
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.split('\n').filter(l => l.trim());
+    if (lines.length < 2) { toast('El archivo está vacío o no tiene datos','error'); return; }
+    const headers = lines[0].split(/[,;\t]/).map(h => h.trim().replace(/"/g,''));
+    const rows = lines.slice(1).map(line => {
+      const vals = line.split(/[,;\t]/).map(v => v.trim().replace(/"/g,''));
+      let obj = {};
+      headers.forEach((h,i) => obj[h] = vals[i] || '');
+      return obj;
+    });
+    pendingImportData = { headers, rows, type: document.getElementById('importType').value };
+    const preview = document.getElementById('importPreview');
+    preview.style.display = 'block';
+    preview.innerHTML = `
+      <div class="alert alert-info"><span class="alert-icon">📋</span><div><strong>${rows.length} registros encontrados.</strong> Columnas: ${headers.join(', ')}</div></div>
+      <div class="table-wrapper" style="max-height:200px;overflow:auto">
+        <table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>${rows.slice(0,5).map(r=>`<tr>${headers.map(h=>`<td>${r[h]||''}</td>`).join('')}</tr>`).join('')}</tbody></table>
+      </div>
+      ${rows.length > 5 ? `<p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem">Mostrando 5 de ${rows.length} registros...</p>` : ''}`;
+    document.getElementById('btnImport').style.display = 'block';
+      if (!document.getElementById('btnCancelImport')) {
+        const cancel = document.createElement('button');
+        cancel.id = 'btnCancelImport';
+        cancel.className = 'btn btn-danger';
+        cancel.style.cssText = 'margin-top:0.5rem;width:100%';
+        cancel.textContent = '❌ Cancelar Importación';
+        cancel.onclick = function() {
+          pendingImportData = null;
+          document.getElementById('importPreview').style.display = 'none';
+          document.getElementById('btnImport').style.display = 'none';
+          cancel.style.display = 'none';
+          toast('Importación cancelada', 'info');
+        };
+        document.getElementById('btnImport').after(cancel);
+      }
+      document.getElementById('btnCancelImport').style.display = 'block';
+  };
+  reader.readAsText(file);
+}
+function executeImport() {
+  if (!pendingImportData) return;
+  const { rows, type } = pendingImportData;
+  let count = 0;
+  if (type === 'empleados') {
+      // Support both standard CSV column names AND actual XLSX column names from the system
+      
+    rows.forEach(r => {
+      const cuil = r.CUIL || r['C.U.I.L.'] || r.cuil || '';
+      const nombre = r.Nombre || r['Apellido y Nombre'] || r.nombre || r.NOMBRE || '';
+      if (!cuil || !nombre) return;
+      const exists = state.empleados.find(e => e.cuil === cuil);
+      if (exists) return;
+      state.empleados.push({
+        id: uuid(), cuil, nombre,
+        nivel: r.Nivel || r.nivel || 'Media',
+        horas: parseInt(r.Horas || r.horas || 12),
+        fechaAlta: r.FechaAlta || r.fechaAlta || r.fecha_alta || '',
+        revista: r.SitRevista || r.sitRevista || r.Revista || 'INT',
+        jurisdiccion: r.Jurisdiccion || r.jurisdiccion || 'PBA',
+        estado: 'activo', jubilacion: 11, obraSocial: 3
+      });
+      count++;
+    });
+    logAudit('IMPORT', `Importados ${count} empleados desde CSV`);
+  } else {
+    // Import novedades
+    rows.forEach(r => {
+      const cuil = r.CUIL || r['C.U.I.L.'] || r.cuil || '';
+      const emp = state.empleados.find(e => e.cuil === cuil);
+      if (!emp) return;
+      state.novedades.push({
+        id: uuid(), empId: emp.id, empNombre: emp.nombre, empCuil: emp.cuil,
+        tipo: r.Tipo || r.tipo || 'remunerativo',
+        concepto: r.Concepto || r.concepto || 'OTRO',
+        conceptoLabel: r.ConceptoLabel || r.Concepto || 'Otro',
+        monto: parseFloat(r.Monto || r.monto || 0),
+        detalle: r.Detalle || r.detalle || '',
+        periodo: r.Periodo || r.periodo || periodKey(new Date().getMonth(), new Date().getFullYear()),
+        cargadoPor: state.user, fecha: new Date().toISOString()
+      });
+      count++;
+    });
+    logAudit('IMPORT', `Importadas ${count} novedades desde CSV`);
+  }
+  saveState(); pendingImportData = null;
+  document.getElementById('importPreview').style.display = 'none';
+  document.getElementById('btnImport').style.display = 'none';
+  toast(`${count} registros importados exitosamente`, 'success');
+}
+
+function downloadCSV(filename, headers, rows) {
+  const BOM = '\uFEFF';
+  const csv = BOM + headers.join(';') + '\n' + rows.map(r => r.join(';')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  logAudit('EXPORT', `Exportado: ${filename}`);
+}
+
+function exportEmpleadosCSV() {
+  const headers = ['CUIL','Nombre','Nivel','Horas','FechaAlta','SitRevista','Jurisdiccion','Estado','Jubilacion','ObraSocial'];
+  const rows = state.empleados.map(e => [e.cuil,e.nombre,e.nivel,e.horas,e.fechaAlta,e.revista,e.jurisdiccion,e.estado,e.jubilacion,e.obraSocial]);
+  downloadCSV('empleados_'+state.society+'.csv', headers, rows);
+  toast('Nómina exportada','success');
+}
+function exportNovedadesCSV() {
+  const p = getSelectedPeriod('nov');
+  const pk = periodKey(p.month, p.year);
+  const filtered = state.novedades.filter(n => n.periodo === pk);
+  const headers = ['CUIL','Nombre','Tipo','Concepto','Monto','Detalle','Periodo','CargadoPor','Fecha'];
+  const rows = filtered.map(n => [n.empCuil,n.empNombre,n.tipo,n.conceptoLabel,n.monto,n.detalle,n.periodo,n.cargadoPor,n.fecha]);
+  downloadCSV(`novedades_${state.society}_${pk}.csv`, headers, rows);
+  toast('Novedades exportadas','success');
+}
+function exportarRecibosCSV() {
+  const p = getSelectedPeriod('rec');
+  const pk = periodKey(p.month, p.year);
+  const filtered = state.recibos.filter(r => r.periodo === pk);
+  const headers = ['CUIL','Nombre','Nivel','BrutoBase','Antiguedad','AddRemun','DescInasist','BrutoTotal','Jubilacion','ObraSocial','Ley19032','TotalAportes','OtrasDeduc','NoRemun','Neto'];
+  const rows = filtered.map(r => [r.empCuil,r.empNombre,r.nivel,r.brutoBase.toFixed(2),r.addAntiguedad.toFixed(2),r.addRemun.toFixed(2),r.descInasist.toFixed(2),r.brutoTotal.toFixed(2),r.aportes.jubilacion.toFixed(2),r.aportes.obraSocial.toFixed(2),r.aportes.ley19032.toFixed(2),r.totalAportes.toFixed(2),r.descuentos.toFixed(2),r.addNoRemun.toFixed(2),r.neto.toFixed(2)]);
+  downloadCSV(`recibos_${state.society}_${pk}.csv`, headers, rows);
+  toast('Recibos exportados','success');
+}
+function exportPlanillaDiscriminativa() {
+  const p = getSelectedPeriod('rec');
+  const pk = periodKey(p.month, p.year);
+  const filtered = state.recibos.filter(r => r.periodo === pk);
+  if (filtered.length === 0) { toast('No hay recibos para este período','warning'); return; }
+  const headers = ['CUIL','Nombre','Nivel','Revista','Horas','Antig%','BrutoBase','AddAntig','Remun','NoRemun','DescInasist','BrutoTotal','Jub','OS','Ley19032','TotalAportes','OtrasDeduc','Neto'];
+  const rows = filtered.map(r => {
+    const emp = state.empleados.find(e=>e.id===r.empId);
+    return [r.empCuil,r.empNombre,r.nivel,emp?.revista||'',emp?.horas||'',r.antiguedadPct,r.brutoBase.toFixed(2),r.addAntiguedad.toFixed(2),r.addRemun.toFixed(2),r.addNoRemun.toFixed(2),r.descInasist.toFixed(2),r.brutoTotal.toFixed(2),r.aportes.jubilacion.toFixed(2),r.aportes.obraSocial.toFixed(2),r.aportes.ley19032.toFixed(2),r.totalAportes.toFixed(2),r.descuentos.toFixed(2),r.neto.toFixed(2)];
+  });
+  // Add totals row
+  const totals = ['','TOTALES','','','','',
+    filtered.reduce((s,r)=>s+r.brutoBase,0).toFixed(2),
+    filtered.reduce((s,r)=>s+r.addAntiguedad,0).toFixed(2),
+    filtered.reduce((s,r)=>s+r.addRemun,0).toFixed(2),
+    filtered.reduce((s,r)=>s+r.addNoRemun,0).toFixed(2),
+    filtered.reduce((s,r)=>s+r.descInasist,0).toFixed(2),
+    filtered.reduce((s,r)=>s+r.brutoTotal,0).toFixed(2),
+    filtered.reduce((s,r)=>s+r.aportes.jubilacion,0).toFixed(2),
+    filtered.reduce((s,r)=>s+r.aportes.obraSocial,0).toFixed(2),
+    filtered.reduce((s,r)=>s+r.aportes.ley19032,0).toFixed(2),
+    filtered.reduce((s,r)=>s+r.totalAportes,0).toFixed(2),
+    filtered.reduce((s,r)=>s+r.descuentos,0).toFixed(2),
+    filtered.reduce((s,r)=>s+r.neto,0).toFixed(2)
+  ];
+  rows.push(totals);
+  downloadCSV(`planilla_discriminativa_${state.society}_${pk}.csv`, headers, rows);
+  toast('Planilla discriminativa exportada','success');
+}
+function exportAntiguedades() {
+  const headers = ['CUIL','Nombre','Nivel','FechaAlta','Años','Meses','Dias','PctActual','ProxTramo','DiasParaCambio'];
+  const rows = state.empleados.filter(e=>e.estado==='activo'&&e.fechaAlta).map(e => {
+    const ant = calcAntiguedad(e.fechaAlta);
+    const tramo = getTramoActual(ant.anios);
+    const prox = getProximoTramo(ant.anios);
+    const dias = diasParaProximoTramo(e.fechaAlta);
+    return [e.cuil,e.nombre,e.nivel,e.fechaAlta,ant.anios,ant.meses,ant.dias,tramo.pct,prox?prox.pct:'MAX',dias||'N/A'];
+  });
+  downloadCSV(`antiguedades_${state.society}.csv`, headers, rows);
+  toast('Antigüedades exportadas','success');
+}
+function exportFullBackup() {
+  const backup = { version:2, date:new Date().toISOString(), society:state.society, empleados:state.empleados, novedades:state.novedades, recibos:state.recibos, firmas:state.firmas, auditLog:state.auditLog };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `backup_${state.society}_${new Date().toISOString().split('T')[0]}.json`; a.click();
+  URL.revokeObjectURL(url);
+  logAudit('EXPORT', 'Backup completo exportado');
+  toast('Backup descargado','success');
+}
+function importBackup() { document.getElementById('backupInput').click(); }
+function handleBackupRestore(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!data.empleados) throw new Error('Formato inválido');
+      if (confirm(`¿Restaurar backup de ${data.society || 'desconocido'} (${new Date(data.date).toLocaleDateString('es-AR')})?\nEsto reemplazará TODOS los datos actuales.`)) {
+        state.empleados = data.empleados || [];
+        state.novedades = data.novedades || [];
+        state.recibos = data.recibos || [];
+        state.firmas = data.firmas || {};
+        state.auditLog = data.auditLog || [];
+        logAudit('IMPORT', 'Backup completo restaurado');
+        saveState(); navigateTo('dashboard');
+        toast('Backup restaurado exitosamente','success');
+      }
+    } catch(err) { toast('Error al leer el backup: ' + err.message, 'error'); }
+  };
+  reader.readAsText(file);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+
+    function showImportPreview(headers, rows) {
+      const preview = document.getElementById('importPreview');
+      preview.style.display = 'block';
+      preview.innerHTML = '<div class="alert alert-info"><span class="alert-icon">📋</span><div><strong>' + rows.length + ' registros encontrados.</strong> Columnas: ' + headers.slice(0,10).join(', ') + '</div></div>' +
+        '<div class="table-wrapper" style="max-height:200px;overflow:auto"><table><thead><tr>' +
+        headers.slice(0,8).map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>' +
+        rows.slice(0,5).map(r => '<tr>' + headers.slice(0,8).map(h => '<td style="font-size:.8rem">' + String(r[h] || '').substring(0,30) + '</td>').join('') + '</tr>').join('') +
+        '</tbody></table></div>';
+      document.getElementById('btnImport').style.display = 'block';
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loginPass').addEventListener('keypress', e => { if(e.key==='Enter') doLogin(); });
+});
+
+    // Pre-loaded data from Excel files
+    const SEED_DATA = {
+      CFPEA: [{"cuil": "20-37039350-9", "nombre": "PRONESTI, FEDERICO ANTONIO", "cargo": "PROFESOR TERCIARIO/SUPERIOR", "nivel": "Formacion", "revista": "TIT", "horas": 6, "altaCargo": "2025-03-01", "altaEstab": "2023-08-16", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "0.0833332", "categoria": "", "tipo": "DOCENTE", "antAA": 14, "antMM": 3, "antPorc": 64}, {"cuil": "23-14738117-4", "nombre": "PIAZZA, CECILIA INES", "cargo": "DIRECTOR 1\u00b0", "nivel": "Formacion", "revista": "TIT", "horas": 0, "altaCargo": "2022-09-01", "altaEstab": "2022-09-01", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "2.7", "categoria": "D1", "tipo": "DOCENTE", "antAA": 0, "antMM": 0, "antPorc": 21}, {"cuil": "23-25385852-4", "nombre": "VAZQUEZ OTERO, LORENA", "cargo": "SECRETARIA PBA", "nivel": "Formacion", "revista": "TIT", "horas": 0, "altaCargo": "2003-03-02", "altaEstab": "2003-05-02", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "1.8", "categoria": "SV", "tipo": "DOCENTE", "antAA": 23, "antMM": 9, "antPorc": 115}, {"cuil": "20-40644111-4", "nombre": "PRONESTI, SEBASTIAN ANGEL", "cargo": "SECRETARIA PBA", "nivel": "Media", "revista": "TIT", "horas": 0, "altaCargo": "2019-12-02", "altaEstab": "2019-12-02", "jubPct": 16, "os": "400800 OSDE", "p1": "1.8", "categoria": "SV", "tipo": "DOCENTE", "antAA": 6, "antMM": 0, "antPorc": 33}, {"cuil": "23-14738117-4", "nombre": "PIAZZA, CECILIA INES", "cargo": "DIRECTOR 1\u00b0", "nivel": "Media", "revista": "TIT", "horas": 0, "altaCargo": "2022-09-01", "altaEstab": "2022-09-01", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "2.7", "categoria": "D1", "tipo": "DOCENTE", "antAA": 0, "antMM": 0, "antPorc": 21}, {"cuil": "23-25385852-4", "nombre": "VAZQUEZ OTERO, LORENA", "cargo": "DIRECTOR 1\u00b0", "nivel": "Media", "revista": "SUP", "horas": 0, "altaCargo": "2019-12-01", "altaEstab": "2003-05-02", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "2.7", "categoria": "D1", "tipo": "DOCENTE", "antAA": 23, "antMM": 9, "antPorc": 115}, {"cuil": "23-25385852-4", "nombre": "VAZQUEZ OTERO, LORENA", "cargo": "SECRETARIA PBA", "nivel": "Media", "revista": "TIT", "horas": 0, "altaCargo": "2022-09-01", "altaEstab": "2003-05-02", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "1.8", "categoria": "SV", "tipo": "DOCENTE", "antAA": 21, "antMM": 9, "antPorc": 105}, {"cuil": "20-24246850-4", "nombre": "ALARCON, ARIEL", "cargo": "VICEDIRECTOR TERCIARIO/SUPERIOR", "nivel": "Superior", "revista": "TIT", "horas": 0, "altaCargo": "2019-02-01", "altaEstab": "2019-02-01", "jubPct": 16, "os": "126205 OSECAC", "p1": "2.16", "categoria": "V3", "tipo": "DOCENTE", "antAA": 10, "antMM": 8, "antPorc": 43}, {"cuil": "20-37039350-9", "nombre": "PRONESTI, FEDERICO ANTONIO", "cargo": "PROFESOR TERCIARIO/SUPERIOR", "nivel": "Superior", "revista": "TIT", "horas": 9, "altaCargo": "2024-08-26", "altaEstab": "2023-08-16", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "0.0833332", "categoria": "", "tipo": "DOCENTE", "antAA": 14, "antMM": 3, "antPorc": 64}, {"cuil": "20-40644111-4", "nombre": "PRONESTI, SEBASTIAN ANGEL", "cargo": "PROFESOR TERCIARIO/SUPERIOR", "nivel": "Superior", "revista": "TIT", "horas": 9, "altaCargo": "2024-08-26", "altaEstab": "2019-12-02", "jubPct": 16, "os": "400800 OSDE", "p1": "0.0833332", "categoria": "", "tipo": "DOCENTE", "antAA": 6, "antMM": 0, "antPorc": 33}, {"cuil": "23-14738117-4", "nombre": "PIAZZA, CECILIA INES", "cargo": "DIRECTOR 1\u00b0", "nivel": "Superior", "revista": "TIT", "horas": 0, "altaCargo": "2022-09-01", "altaEstab": "2022-09-01", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "2.7", "categoria": "D1", "tipo": "DOCENTE", "antAA": 0, "antMM": 0, "antPorc": 21}, {"cuil": "23-25385852-4", "nombre": "VAZQUEZ OTERO, LORENA", "cargo": "SECRETARIA PBA", "nivel": "Superior", "revista": "TIT", "horas": 0, "altaCargo": "2003-05-02", "altaEstab": "2003-05-02", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "1.8", "categoria": "SV", "tipo": "DOCENTE", "antAA": 23, "antMM": 9, "antPorc": 115}, {"cuil": "27-24638225-0", "nombre": "COPA, ALICIA SOCORRO", "cargo": "VICEDIRECTOR TERCIARIO/SUPERIOR", "nivel": "Superior", "revista": "TIT", "horas": 0, "altaCargo": "2014-09-03", "altaEstab": "2014-09-03", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "2.16", "categoria": "V3", "tipo": "DOCENTE", "antAA": 15, "antMM": 8, "antPorc": 64}, {"cuil": "27-36076274-8", "nombre": "AYALA, ERICA NOELIA", "cargo": "PROFESOR TERCIARIO/SUPERIOR", "nivel": "Superior", "revista": "TIT", "horas": 9, "altaCargo": "2024-08-26", "altaEstab": "2024-08-26", "jubPct": 16, "os": "400800 OSDE", "p1": "0.0833332", "categoria": "", "tipo": "DOCENTE", "antAA": 5, "antMM": 3, "antPorc": 33}, {"cuil": "20-35960452-2", "nombre": "CORDERO, MATIAS", "cargo": "Prosecretario", "nivel": "Superior", "revista": "SUP", "horas": 0, "altaCargo": "2025-08-04", "altaEstab": "2025-08-04", "jubPct": 16, "os": "", "p1": "", "categoria": "", "tipo": "DOCENTE", "antAA": 0, "antMM": 0, "antPorc": 0}],
+      ISFTEA: [{"cuil": "20-37039350-9", "nombre": "PRONESTI, FEDERICO ANTONIO", "cargo": "DIRECTOR 1\u00b0 MEDIA/FORMACION", "nivel": "Formacion", "revista": "TIT", "horas": 0, "altaCargo": "2019-12-01", "altaEstab": "2011-08-01", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "2.7", "categoria": "D2", "tipo": "DOCENTE", "antAA": 14, "antMM": 9, "antPorc": 64}, {"cuil": "27-24638225-0", "nombre": "COPA, ALICIA SOCORRO", "cargo": "DIRECTOR 3\u00b0 SUPERIOR PBA", "nivel": "Formacion", "revista": "TIT", "horas": 0, "altaCargo": "2025-02-01", "altaEstab": "2016-08-01", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "2.16", "categoria": "D1", "tipo": "DOCENTE", "antAA": 15, "antMM": 8, "antPorc": 64}, {"cuil": "27-36076274-8", "nombre": "AYALA, ERICA NOELIA", "cargo": "SECRETARIA TERCIARIO/SUPERIOR", "nivel": "Formacion", "revista": "TIT", "horas": 0, "altaCargo": "2019-12-02", "altaEstab": "2019-12-01", "jubPct": 16, "os": "400800 OSDE", "p1": "1.8", "categoria": "MS", "tipo": "DOCENTE", "antAA": 5, "antMM": 3, "antPorc": 33}, {"cuil": "20-37039350-9", "nombre": "PRONESTI, FEDERICO ANTONIO", "cargo": "DIRECTOR 3\u00b0 SUPERIOR PBA", "nivel": "Superior", "revista": "PROV", "horas": 0, "altaCargo": "2011-08-01", "altaEstab": "2011-08-01", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "2.16", "categoria": "D1", "tipo": "DOCENTE", "antAA": 14, "antMM": 9, "antPorc": 64}, {"cuil": "20-40644111-4", "nombre": "PRONESTI, SEBASTIAN ANGEL", "cargo": "REGENTE SUPERIOR", "nivel": "Superior", "revista": "TIT", "horas": 0, "altaCargo": "2019-01-01", "altaEstab": "2019-01-01", "jubPct": 16, "os": "400800 OSDE", "p1": "2.16", "categoria": "PS", "tipo": "DOCENTE", "antAA": 5, "antMM": 11, "antPorc": 33}, {"cuil": "27-24638225-0", "nombre": "COPA, ALICIA SOCORRO", "cargo": "SECRETARIA TERCIARIO/SUPERIOR", "nivel": "Superior", "revista": "SUP", "horas": 0, "altaCargo": "2025-02-01", "altaEstab": "2016-08-01", "jubPct": 16, "os": "113809 OS.COM.NAV", "p1": "1.8", "categoria": "MS", "tipo": "DOCENTE", "antAA": 15, "antMM": 8, "antPorc": 64}, {"cuil": "27-36076274-8", "nombre": "AYALA, ERICA NOELIA", "cargo": "VICEDIRECTOR TERCIARIO/SUPERIOR", "nivel": "Superior", "revista": "TIT", "horas": 0, "altaCargo": "2021-01-01", "altaEstab": "2019-12-01", "jubPct": 16, "os": "400800 OSDE", "p1": "2.16", "categoria": "V3", "tipo": "DOCENTE", "antAA": 3, "antMM": 11, "antPorc": 24}, {"cuil": "20-23477718-2", "nombre": "CARNABUCI, ALBERTO SERGIO", "cargo": "VICEDIRECTOR TERCIARIO/SUPERIOR", "nivel": "Superior", "revista": "SUP", "horas": 0, "altaCargo": "2021-03-01", "altaEstab": "2021-03-01", "jubPct": 16, "os": "", "p1": "2.16", "categoria": "V3", "tipo": "DOCENTE", "antAA": 0, "antMM": 0, "antPorc": 0}]
+    };
+    // Auto-seed on first load if no data exists
+    function checkAndSeed() {
+      ['CFPEA', 'ISFTEA'].forEach(soc => {
+        const key = 'iea_liq_' + soc;
+        const existing = localStorage.getItem(key);
+        if (!existing) {
+          const seed = SEED_DATA[soc];
+          if (seed) {
+            const empleados = [];
+            const seen = {};
+            seed.forEach(c => {
+              const id = c.cuil + '_' + c.cargo + '_' + c.nivel;
+              if (seen[id]) return;
+              seen[id] = true;
+              empleados.push({
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2,5),
+                cuil: c.cuil, nombre: c.nombre, nivel: c.nivel,
+                horas: c.horas || 0, revista: c.revista || 'TIT',
+                jurisdiccion: 'PBA', fechaAlta: c.altaCargo || '',
+                estado: 'activo', jubilacion: c.jubPct || 16, obraSocial: 3,
+                cargo: c.cargo || '', categoria: c.categoria || '',
+                tipo: c.tipo || 'DOCENTE', p1: c.p1 || '',
+                altaEstab: c.altaEstab || '', os: c.os || '',
+                antAA: c.antAA || 0, antMM: c.antMM || 0, antPorc: c.antPorc || 0
+              });
+            });
+            const state = { society: soc, empleados: empleados, novedades: [], recibos: [], firmas: {}, auditLog: [] };
+            localStorage.setItem(key, JSON.stringify(state));
+          }
+        }
+      });
+    }
+    checkAndSeed();
+
+</script>
+</body>
+</html>
